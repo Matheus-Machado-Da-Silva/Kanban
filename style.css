@@ -1,0 +1,180 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial, Helvetica, sans-serif;
+}
+
+body{
+    background:#050505;
+    color:white;
+    padding:20px;
+}
+
+.container{
+    max-width:1400px;
+    margin:auto;
+}
+
+h1{
+    text-align:center;
+    color:#00ffff;
+    margin-bottom:30px;
+    text-shadow:0 0 15px #00ffff;
+}
+
+.dashboard{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:15px;
+    margin-bottom:30px;
+}
+
+.card{
+    background:#111;
+    border:1px solid #00ffff;
+    border-radius:12px;
+    padding:20px;
+    text-align:center;
+    box-shadow:0 0 15px rgba(0,255,255,0.3);
+}
+
+.card span{
+    display:block;
+    font-size:32px;
+    font-weight:bold;
+    color:#00ffff;
+}
+
+.card p{
+    margin-top:10px;
+    color:#ccc;
+}
+
+.formulario{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+    gap:15px;
+    margin-bottom:20px;
+}
+
+input,
+select{
+    background:#111;
+    color:white;
+    border:1px solid #00ffff;
+    padding:12px;
+    border-radius:8px;
+    outline:none;
+}
+
+input:focus,
+select:focus{
+    box-shadow:0 0 10px #00ffff;
+}
+
+button{
+    background:#00bfff;
+    color:black;
+    border:none;
+    padding:12px;
+    border-radius:8px;
+    font-weight:bold;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+button:hover{
+    transform:scale(1.03);
+    box-shadow:0 0 15px #00ffff;
+}
+
+.acoes{
+    margin-bottom:20px;
+}
+
+.relatorio{
+    margin-bottom:20px;
+}
+
+textarea{
+    width:100%;
+    background:#111;
+    color:white;
+    border:1px solid #00ffff;
+    border-radius:8px;
+    padding:15px;
+    resize:none;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    background:#111;
+}
+
+th{
+    background:#00bfff;
+    color:black;
+    padding:12px;
+}
+
+td{
+    padding:12px;
+    border-bottom:1px solid #222;
+    text-align:center;
+}
+
+tr:hover{
+    background:#181818;
+}
+
+.btnExcluir{
+    background:#ff3333;
+    color:white;
+    padding:8px 12px;
+}
+
+.btnExcluir:hover{
+    box-shadow:0 0 15px red;
+}
+
+.status-kanban{
+    color:#ffcc00;
+}
+
+.status-producao{
+    color:#00ffff;
+}
+
+.status-teste{
+    color:#00ff66;
+}
+
+.status-vistoria{
+    color:#ff66ff;
+}
+
+.status-standby{
+    color:#00ff00;
+}
+
+.status-peca{
+    color:#ff4444;
+}
+
+@media(max-width:768px){
+
+    h1{
+        font-size:24px;
+    }
+
+    table{
+        font-size:12px;
+    }
+
+    .card span{
+        font-size:24px;
+    }
+
+}
