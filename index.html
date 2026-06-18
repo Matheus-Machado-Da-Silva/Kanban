@@ -1,113 +1,174 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
 <title>Kanban BRMobility</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:#050e17;font-family:'Segoe UI',Arial,sans-serif;color:#e0f0ff;min-height:100vh;padding:1rem}
-h1{text-align:center;font-size:20px;font-weight:700;color:#00e5ff;letter-spacing:2px;margin-bottom:1.2rem}
+body{background:#0a0f0a;font-family:'Segoe UI',Arial,sans-serif;color:#e8f5e9;min-height:100vh;padding:0 0 2rem}
+
+/* HEADER */
+.top-bar{background:#0d150d;border-bottom:2px solid #2e7d32;padding:12px 1rem;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:1.2rem}
+.logo-area{display:flex;align-items:center;gap:10px}
+.logo-img{height:36px;width:auto;filter:brightness(0) invert(1)}
+.page-title{font-size:13px;font-weight:700;color:#66bb6a;letter-spacing:1.5px;text-transform:uppercase;white-space:nowrap}
+.dept-tag{font-size:11px;color:#388e3c;letter-spacing:1px}
+
+/* CONTENT WRAPPER */
+.wrap{padding:0 1rem}
+
+/* STATS */
 .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:1.2rem}
 @media(min-width:500px){.stats{grid-template-columns:repeat(4,1fr)}}
-.stat-card{background:#0d1b2a;border:1.5px solid #00e5ff;border-radius:12px;padding:.9rem;text-align:center}
-.stat-card .num{font-size:28px;font-weight:700;color:#00e5ff}
-.stat-card .lbl{font-size:12px;color:#8fb3c7;margin-top:3px}
+.stat-card{background:#0d1f0d;border:1.5px solid #2e7d32;border-radius:12px;padding:.9rem;text-align:center;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#1b5e20,#66bb6a,#1b5e20)}
+.stat-card .num{font-size:30px;font-weight:700;color:#66bb6a}
+.stat-card .lbl{font-size:11px;color:#81c784;margin-top:4px;text-transform:uppercase;letter-spacing:.5px}
+
+/* SEARCH BAR */
+.search-bar{background:#0d1f0d;border:1.5px solid #2e7d32;border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.search-bar input{background:none;border:none;outline:none;color:#e8f5e9;font-size:15px;flex:1;min-width:0}
+.search-bar input::placeholder{color:#4a7a4d}
+.search-icon{color:#66bb6a;font-size:18px;flex-shrink:0}
+.search-result-tag{font-size:12px;color:#66bb6a;background:#1b5e20;padding:2px 10px;border-radius:20px;white-space:nowrap;display:none}
+
+/* CONTROLS */
 .controls{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap}
-.controls select,.controls input{background:#0d1b2a;border:1px solid #00e5ff55;color:#e0f0ff;padding:9px 10px;border-radius:8px;font-size:14px;flex:1;min-width:0;height:42px;-webkit-appearance:none;appearance:none}
-.controls select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2300e5ff' d='M6 8L0 0h12z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
-.controls input::placeholder{color:#8fb3c7}
-.btn-add{background:#00e5ff;color:#000;border:none;padding:0 16px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;height:42px;white-space:nowrap;width:100%}
-.btn-add:active{background:#00b8cc}
-.btn-wp{background:#25d366;color:#fff;border:none;padding:0 16px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;height:42px;width:100%}
-.btn-wp:active{background:#1aa34a}
-.count-info{font-size:12px;color:#8fb3c7;margin-bottom:8px}
-.table-wrap{background:#0d1b2a;border:1.5px solid #00e5ff33;border-radius:12px;overflow:hidden;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.controls select{background:#0d1f0d;border:1px solid #2e7d3255;color:#e8f5e9;padding:9px 28px 9px 10px;border-radius:8px;font-size:14px;flex:1;min-width:0;height:42px;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2366bb6a' d='M6 8L0 0h12z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+.btn-add{background:#2e7d32;color:#fff;border:none;padding:0 16px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;height:42px;white-space:nowrap;width:100%;letter-spacing:.3px}
+.btn-add:active{background:#1b5e20}
+.btn-wp{background:#0d1f0d;color:#66bb6a;border:1.5px solid #2e7d32;padding:0 16px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;height:42px;width:100%}
+.btn-wp:active{background:#1a2e1a}
+.count-info{font-size:12px;color:#4a7a4d;margin-bottom:8px}
+
+/* TABLE */
+.table-wrap{background:#0d1f0d;border:1.5px solid #2e7d3233;border-radius:12px;overflow:hidden;overflow-x:auto;-webkit-overflow-scrolling:touch}
 table{width:100%;border-collapse:collapse;font-size:13px;min-width:320px}
-thead tr{background:#001f33}
-th{padding:10px 10px;text-align:left;color:#00e5ff;font-weight:700;font-size:12px;border-bottom:1px solid #00e5ff33;white-space:nowrap}
-td{padding:10px 10px;color:#e0f0ff;border-bottom:0.5px solid #00e5ff18;vertical-align:middle}
+thead tr{background:#0a170a}
+th{padding:10px 10px;text-align:left;color:#66bb6a;font-weight:700;font-size:11px;border-bottom:1px solid #2e7d3233;white-space:nowrap;text-transform:uppercase;letter-spacing:.5px}
+td{padding:9px 10px;color:#e8f5e9;border-bottom:0.5px solid #2e7d3218;vertical-align:middle}
 tr:last-child td{border-bottom:none}
+tr:hover td{background:#2e7d320a}
+
+/* BADGES */
 .badge{display:inline-block;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap}
-.b-prod{background:#0f3a2a;color:#4ade80;border:1px solid #4ade8044}
+.b-prod{background:#0a3d1f;color:#4ade80;border:1px solid #4ade8044}
 .b-test{background:#2a1f00;color:#fbbf24;border:1px solid #fbbf2444}
 .b-standby{background:#2a0a0a;color:#f87171;border:1px solid #f8717144}
 .b-imp{background:#0a1a2a;color:#60a5fa;border:1px solid #60a5fa44}
 .b-agt{background:#1a0a2a;color:#c084fc;border:1px solid #c084fc44}
 .b-aginsumo{background:#1a1500;color:#facc15;border:1px solid #facc1544}
-.b-disp{background:#0a1f0a;color:#86efac;border:1px solid #86efac44}
-.b-other{background:#1a1a1a;color:#94a3b8;border:1px solid #94a3b844}
+.b-disp{background:#0a2a10;color:#86efac;border:1px solid #86efac44}
+.b-other{background:#111;color:#94a3b8;border:1px solid #94a3b844}
+
+/* ACTION BUTTONS */
 .action-btns{display:flex;gap:4px}
-.btn-edit,.btn-del{background:none;border:none;cursor:pointer;font-size:15px;padding:4px 6px;border-radius:4px;line-height:1}
-.btn-edit{color:#00e5ff}
-.btn-edit:active{background:#00e5ff22}
+.btn-edit,.btn-del{background:none;border:none;cursor:pointer;font-size:15px;padding:5px 6px;border-radius:4px;line-height:1}
+.btn-edit{color:#66bb6a}
+.btn-edit:active{background:#66bb6a22}
 .btn-del{color:#f87171}
 .btn-del:active{background:#f8717122}
-.empty{text-align:center;padding:2rem;color:#8fb3c7;font-size:14px}
+
+.empty{text-align:center;padding:2rem;color:#4a7a4d;font-size:14px}
+
+/* INLINE SELECT */
+.inline-select{background:#0a170a;border:1px solid #2e7d3244;color:#e8f5e9;padding:4px 24px 4px 6px;border-radius:6px;font-size:12px;-webkit-appearance:none;appearance:none;max-width:150px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath fill='%2366bb6a' d='M5 7L0 0h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 6px center}
+
+/* MODALS */
 .modal-bg{display:none;position:fixed;inset:0;background:#000c;z-index:100;align-items:flex-end;justify-content:center}
 @media(min-width:500px){.modal-bg{align-items:center}}
 .modal-bg.open{display:flex}
-.modal{background:#0d1b2a;border:1.5px solid #00e5ff;border-radius:16px 16px 0 0;padding:1.5rem 1.2rem;width:100%;max-width:460px;max-height:90vh;overflow-y:auto}
-@media(min-width:500px){.modal{border-radius:16px;max-height:85vh}}
-.modal h2{color:#00e5ff;font-size:17px;font-weight:700;margin-bottom:1rem}
-.modal label{font-size:13px;color:#8fb3c7;display:block;margin-bottom:4px;margin-top:12px}
-.modal select,.modal input{width:100%;background:#001f33;border:1px solid #00e5ff44;color:#e0f0ff;padding:10px 12px;border-radius:8px;font-size:15px;-webkit-appearance:none;appearance:none;height:44px}
-.modal select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2300e5ff' d='M6 8L0 0h12z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+
+.modal{background:#0d1f0d;border:1.5px solid #2e7d32;border-radius:16px 16px 0 0;padding:1.5rem 1.2rem;width:100%;max-width:460px;max-height:90vh;overflow-y:auto}
+@media(min-width:500px){.modal{border-radius:16px}}
+.modal h2{color:#66bb6a;font-size:17px;font-weight:700;margin-bottom:1rem;display:flex;align-items:center;gap:8px}
+.modal label{font-size:13px;color:#81c784;display:block;margin-bottom:4px;margin-top:12px}
+.modal select,.modal input{width:100%;background:#0a170a;border:1px solid #2e7d3244;color:#e8f5e9;padding:10px 12px;border-radius:8px;font-size:15px;-webkit-appearance:none;appearance:none;height:44px;outline:none}
+.modal select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2366bb6a' d='M6 8L0 0h12z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+.modal input:focus,.modal select:focus{border-color:#66bb6a}
 .modal-btns{display:flex;gap:10px;margin-top:1.25rem}
-.btn-cancel{background:none;border:1px solid #00e5ff44;color:#8fb3c7;padding:0;border-radius:8px;cursor:pointer;font-size:14px;flex:1;height:44px}
-.btn-save{background:#00e5ff;color:#000;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;flex:2;height:44px}
-.btn-save:active{background:#00b8cc}
-.modal-wp{background:#0d1b2a;border:1.5px solid #25d366;border-radius:16px 16px 0 0;padding:1.5rem 1.2rem;width:100%;max-width:520px;max-height:90vh;overflow-y:auto}
-@media(min-width:500px){.modal-wp{border-radius:16px;max-height:85vh}}
-.modal-wp h2{color:#25d366;font-size:17px;font-weight:700;margin-bottom:1rem}
-.msg-box{background:#001f33;border:1px solid #25d36644;border-radius:8px;padding:1rem;font-size:13px;color:#e0f0ff;white-space:pre-wrap;max-height:300px;overflow-y:auto;line-height:1.7}
-.btn-copy{background:#25d366;color:#fff;border:none;padding:0;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;flex:2;height:44px}
-.btn-copy:active{background:#1aa34a}
-.warn-box{background:#2a1500;border:1px solid #f97316;border-radius:8px;padding:10px 12px;font-size:13px;color:#fb923c;margin-top:10px;display:none}
-.inline-select{background:#001f33;border:1px solid #00e5ff44;color:#e0f0ff;padding:4px 6px;border-radius:6px;font-size:12px;-webkit-appearance:none;appearance:none;max-width:140px}
+.btn-cancel{background:none;border:1px solid #2e7d3255;color:#81c784;padding:0;border-radius:8px;cursor:pointer;font-size:14px;flex:1;height:44px}
+.btn-save{background:#2e7d32;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;flex:2;height:44px}
+.btn-save:active{background:#1b5e20}
+
+.modal-wp{background:#0d1f0d;border:1.5px solid #2e7d32;border-radius:16px 16px 0 0;padding:1.5rem 1.2rem;width:100%;max-width:520px;max-height:90vh;overflow-y:auto}
+@media(min-width:500px){.modal-wp{border-radius:16px}}
+.modal-wp h2{color:#66bb6a;font-size:17px;font-weight:700;margin-bottom:1rem}
+.msg-box{background:#0a170a;border:1px solid #2e7d3244;border-radius:8px;padding:1rem;font-size:13px;color:#e8f5e9;white-space:pre-wrap;max-height:320px;overflow-y:auto;line-height:1.7}
+.btn-copy{background:#2e7d32;color:#fff;border:none;padding:0;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;flex:2;height:44px}
+.btn-copy:active{background:#1b5e20}
+
+.warn-box{background:#2a1000;border:1px solid #f97316;border-radius:8px;padding:10px 12px;font-size:13px;color:#fb923c;margin-top:10px;display:none}
+
+/* DIVIDER */
+.section-divider{height:1px;background:linear-gradient(90deg,transparent,#2e7d32,transparent);margin:1rem 0}
 </style>
 </head>
 <body>
 
-<h1>⚡ KANBAN BRMOBILITY</h1>
-
-<div class="stats">
-  <div class="stat-card"><div class="num" id="tot">0</div><div class="lbl">Total Veículos</div></div>
-  <div class="stat-card"><div class="num" id="nprod">0</div><div class="lbl">Em Produção</div></div>
-  <div class="stat-card"><div class="num" id="nteste">0</div><div class="lbl">Em Teste</div></div>
-  <div class="stat-card"><div class="num" id="nstandby">0</div><div class="lbl">Stand By</div></div>
+<!-- HEADER -->
+<div class="top-bar">
+  <div class="logo-area">
+    <img src="https://brmobility.com.br/wp-content/uploads/2025/07/logo-BRMobility-black-green-1-1.png" alt="BRMobility" class="logo-img" onerror="this.style.display='none'"/>
+    <div>
+      <div class="page-title">Kanban Pátio</div>
+      <div class="dept-tag">Departamento Técnico</div>
+    </div>
+  </div>
 </div>
 
-<div class="controls">
-  <select id="fModelo" style="flex:1"><option value="">Modelo</option></select>
-  <input id="fPat" placeholder="Patrimônio" style="flex:1" />
-  <select id="fStatus" style="flex:1"><option value="">Status</option></select>
-</div>
-<div class="controls">
-  <button class="btn-add" onclick="openAdd()">+ Adicionar Veículo</button>
-  <button class="btn-wp" onclick="openWP()">📋 Relatório WhatsApp</button>
-</div>
-<div class="count-info" id="countInfo"></div>
+<div class="wrap">
 
-<div class="table-wrap">
-  <table>
-    <thead>
-      <tr><th>Modelo</th><th>Patrimônio</th><th>Status</th><th style="width:72px">Ações</th></tr>
-    </thead>
-    <tbody id="tbody"></tbody>
-  </table>
-  <div class="empty" id="empty" style="display:none">Nenhum veículo encontrado.</div>
+  <!-- STATS -->
+  <div class="stats">
+    <div class="stat-card"><div class="num" id="tot">0</div><div class="lbl">Total Veículos</div></div>
+    <div class="stat-card"><div class="num" id="nprod">0</div><div class="lbl">Em Produção</div></div>
+    <div class="stat-card"><div class="num" id="nteste">0</div><div class="lbl">Em Teste</div></div>
+    <div class="stat-card"><div class="num" id="nstandby">0</div><div class="lbl">Stand By</div></div>
+  </div>
+
+  <!-- BUSCA POR PATRIMÔNIO -->
+  <div class="search-bar">
+    <span class="search-icon">🔍</span>
+    <input id="searchPat" placeholder="Buscar patrimônio..." inputmode="text" autocomplete="off" />
+    <span class="search-result-tag" id="searchTag"></span>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- FILTROS -->
+  <div class="controls">
+    <select id="fModelo"><option value="">Todos os modelos</option></select>
+    <select id="fStatus"><option value="">Todos os status</option></select>
+  </div>
+  <div class="controls">
+    <button class="btn-add" onclick="openAdd()">＋ Adicionar Veículo</button>
+    <button class="btn-wp" onclick="openWP()">📋 Relatório WhatsApp</button>
+  </div>
+  <div class="count-info" id="countInfo"></div>
+
+  <!-- TABELA -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Modelo</th><th>Patrimônio</th><th>Status</th><th style="width:72px">Ações</th></tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div class="empty" id="empty" style="display:none">Nenhum veículo encontrado.</div>
+  </div>
 </div>
 
 <!-- Modal Adicionar/Editar -->
 <div class="modal-bg" id="modalAdd">
   <div class="modal">
-    <h2 id="modalTitle">Adicionar Veículo</h2>
+    <h2 id="modalTitle">＋ Adicionar Veículo</h2>
     <div class="warn-box" id="warnDup">⚠️ Já existe um veículo com este modelo e patrimônio!</div>
     <label>Modelo</label>
-    <input id="inModelo" placeholder="Ex: S8, S9, BR8..." autocomplete="off" />
+    <input id="inModelo" placeholder="Ex: S8, S9, BR8..." autocomplete="off"/>
     <label>Patrimônio</label>
-    <input id="inPat" placeholder="Ex: 0123" autocomplete="off" inputmode="text" />
+    <input id="inPat" placeholder="Ex: 0123" autocomplete="off" inputmode="text"/>
     <label>Status</label>
     <select id="inStatus">
       <option value="Em Produção">Em Produção</option>
@@ -143,7 +204,7 @@ tr:last-child td{border-bottom:none}
 </div>
 
 <script>
-const STORAGE_KEY='brmobility_v3';
+const STORAGE_KEY='brmobility_v4';
 const STATUS_LIST=['Em Produção','Em Teste','Stand By','Implementado','Aguardando Manutenção','Aguardando Insumos','Disponível','Emergencial','Em Manutenção','Em Vistoria','Inativo','Previsto'];
 
 const INITIAL=[
@@ -295,10 +356,7 @@ const INITIAL=[
   {modelo:'S9',patrimonio:'0529',status:'Implementado'},
 ];
 
-function load(){
-  try{const d=localStorage.getItem(STORAGE_KEY);if(d)return JSON.parse(d);}catch(e){}
-  return JSON.parse(JSON.stringify(INITIAL));
-}
+function load(){try{const d=localStorage.getItem(STORAGE_KEY);if(d)return JSON.parse(d);}catch(e){}return JSON.parse(JSON.stringify(INITIAL));}
 function save(data){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(data));}catch(e){}}
 
 let vehicles=load();
@@ -317,22 +375,39 @@ function badgeClass(s){
   return 'b-other';
 }
 
-function statusSelectHTML(currentVal, idx){
+function statusSelectHTML(currentVal,idx){
   const opts=STATUS_LIST.map(s=>`<option value="${s}"${s===currentVal?' selected':''}>${s}</option>`).join('');
   return `<select class="inline-select" onchange="changeStatus(${idx},this.value)">${opts}</select>`;
 }
 
 function render(){
+  const sp=document.getElementById('searchPat').value.trim().toLowerCase();
   const fm=document.getElementById('fModelo').value;
-  const fp=document.getElementById('fPat').value.toLowerCase();
   const fs=document.getElementById('fStatus').value;
 
   const filtered=vehicles.map((v,i)=>({...v,_i:i})).filter(v=>{
+    if(sp){
+      // busca exata por patrimônio: mostra só se o patrimônio contém o termo
+      if(!v.patrimonio.toLowerCase().includes(sp))return false;
+    }
     if(fm && v.modelo!==fm)return false;
-    if(fp && !v.patrimonio.toLowerCase().includes(fp))return false;
     if(fs && v.status!==fs)return false;
     return true;
   });
+
+  // highlight busca por patrimônio
+  const tag=document.getElementById('searchTag');
+  if(sp&&filtered.length>0){
+    tag.style.display='inline-block';
+    tag.textContent=filtered.length===1?'1 encontrado':filtered.length+' encontrados';
+  } else if(sp&&filtered.length===0){
+    tag.style.display='inline-block';
+    tag.textContent='Não encontrado';
+    tag.style.background='#3d0a0a';tag.style.color='#f87171';
+  } else {
+    tag.style.display='none';
+    tag.style.background='#1b5e20';tag.style.color='#66bb6a';
+  }
 
   document.getElementById('tot').textContent=vehicles.length;
   document.getElementById('nprod').textContent=vehicles.filter(v=>v.status==='Em Produção').length;
@@ -344,8 +419,8 @@ function render(){
   const selMod=document.getElementById('fModelo');
   const selStat=document.getElementById('fStatus');
   const curMod=selMod.value,curStat=selStat.value;
-  selMod.innerHTML='<option value="">Modelo</option>'+modelos.map(m=>`<option value="${m}"${m===curMod?' selected':''}>${m}</option>`).join('');
-  selStat.innerHTML='<option value="">Status</option>'+statuses.map(s=>`<option value="${s}"${s===curStat?' selected':''}>${s}</option>`).join('');
+  selMod.innerHTML='<option value="">Todos os modelos</option>'+modelos.map(m=>`<option value="${m}"${m===curMod?' selected':''}>${m}</option>`).join('');
+  selStat.innerHTML='<option value="">Todos os status</option>'+statuses.map(s=>`<option value="${s}"${s===curStat?' selected':''}>${s}</option>`).join('');
 
   document.getElementById('countInfo').textContent=filtered.length+' veículo(s) exibido(s) de '+vehicles.length+' total';
 
@@ -353,9 +428,10 @@ function render(){
   const empty=document.getElementById('empty');
   if(filtered.length===0){tbody.innerHTML='';empty.style.display='block';return;}
   empty.style.display='none';
-  tbody.innerHTML=filtered.map(v=>`<tr>
+
+  tbody.innerHTML=filtered.map(v=>`<tr${sp&&v.patrimonio.toLowerCase()===sp?' style="background:#1b5e2022"':''}>
     <td style="font-weight:700">${v.modelo}</td>
-    <td>${v.patrimonio}</td>
+    <td style="font-family:monospace;font-size:13px">${v.patrimonio}</td>
     <td>${statusSelectHTML(v.status,v._i)}</td>
     <td><div class="action-btns">
       <button class="btn-edit" onclick="openEdit(${v._i})" title="Editar">✏️</button>
@@ -364,22 +440,16 @@ function render(){
   </tr>`).join('');
 }
 
-function changeStatus(i, val){
-  vehicles[i].status=val;
-  save(vehicles);
-  render();
-}
+function changeStatus(i,val){vehicles[i].status=val;save(vehicles);render();}
 
 function del(i){
   if(!confirm('Remover '+vehicles[i].modelo+' - '+vehicles[i].patrimonio+'?'))return;
-  vehicles.splice(i,1);
-  save(vehicles);
-  render();
+  vehicles.splice(i,1);save(vehicles);render();
 }
 
 function openAdd(){
   editIndex=-1;
-  document.getElementById('modalTitle').textContent='Adicionar Veículo';
+  document.getElementById('modalTitle').textContent='＋ Adicionar Veículo';
   document.getElementById('btnSave').textContent='Salvar';
   document.getElementById('inModelo').value='';
   document.getElementById('inPat').value='';
@@ -392,7 +462,7 @@ function openAdd(){
 function openEdit(i){
   editIndex=i;
   const v=vehicles[i];
-  document.getElementById('modalTitle').textContent='Editar Veículo';
+  document.getElementById('modalTitle').textContent='✏️ Editar Veículo';
   document.getElementById('btnSave').textContent='Atualizar';
   document.getElementById('inModelo').value=v.modelo;
   document.getElementById('inPat').value=v.patrimonio;
@@ -403,9 +473,7 @@ function openEdit(i){
 
 function closeAdd(){document.getElementById('modalAdd').classList.remove('open');}
 
-function checkDup(m,p,skipIdx){
-  return vehicles.some((v,i)=>i!==skipIdx && v.modelo===m && v.patrimonio===p);
-}
+function checkDup(m,p,skipIdx){return vehicles.some((v,i)=>i!==skipIdx&&v.modelo===m&&v.patrimonio===p);}
 
 function saveVehicle(){
   const m=document.getElementById('inModelo').value.trim().toUpperCase();
@@ -415,14 +483,9 @@ function saveVehicle(){
   const dup=checkDup(m,p,editIndex);
   document.getElementById('warnDup').style.display=dup?'block':'none';
   if(dup)return;
-  if(editIndex>=0){
-    vehicles[editIndex]={modelo:m,patrimonio:p,status:s};
-  } else {
-    vehicles.push({modelo:m,patrimonio:p,status:s});
-  }
-  save(vehicles);
-  closeAdd();
-  render();
+  if(editIndex>=0){vehicles[editIndex]={modelo:m,patrimonio:p,status:s};}
+  else{vehicles.push({modelo:m,patrimonio:p,status:s});}
+  save(vehicles);closeAdd();render();
 }
 
 function openWP(){
@@ -441,38 +504,27 @@ function closeWP(){document.getElementById('modalWP').classList.remove('open');}
 
 function copyMsg(){
   const txt=document.getElementById('wpMsg').textContent;
-  if(navigator.clipboard){
-    navigator.clipboard.writeText(txt).then(()=>{
-      const btn=document.getElementById('btnCopy');
-      btn.textContent='✓ Copiado!';
-      setTimeout(()=>{btn.textContent='📋 Copiar';},2000);
-    });
-  } else {
-    const ta=document.createElement('textarea');
-    ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';
-    document.body.appendChild(ta);ta.select();
-    document.execCommand('copy');
-    document.body.removeChild(ta);
-    const btn=document.getElementById('btnCopy');
-    btn.textContent='✓ Copiado!';
-    setTimeout(()=>{btn.textContent='📋 Copiar';},2000);
-  }
+  const fallback=()=>{
+    const ta=document.createElement('textarea');ta.value=txt;ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+  };
+  const done=()=>{const btn=document.getElementById('btnCopy');btn.textContent='✓ Copiado!';setTimeout(()=>{btn.textContent='📋 Copiar';},2000);};
+  if(navigator.clipboard){navigator.clipboard.writeText(txt).then(done).catch(fallback);}
+  else{fallback();done();}
 }
 
 document.getElementById('fModelo').onchange=render;
 document.getElementById('fStatus').onchange=render;
-document.getElementById('fPat').oninput=render;
+document.getElementById('searchPat').oninput=render;
 document.getElementById('modalAdd').addEventListener('click',function(e){if(e.target===this)closeAdd();});
 document.getElementById('modalWP').addEventListener('click',function(e){if(e.target===this)closeWP();});
 
 document.getElementById('inModelo').addEventListener('input',function(){
-  const m=this.value.trim().toUpperCase();
-  const p=document.getElementById('inPat').value.trim();
+  const m=this.value.trim().toUpperCase(),p=document.getElementById('inPat').value.trim();
   document.getElementById('warnDup').style.display=(m&&p&&checkDup(m,p,editIndex))?'block':'none';
 });
 document.getElementById('inPat').addEventListener('input',function(){
-  const p=this.value.trim();
-  const m=document.getElementById('inModelo').value.trim().toUpperCase();
+  const p=this.value.trim(),m=document.getElementById('inModelo').value.trim().toUpperCase();
   document.getElementById('warnDup').style.display=(m&&p&&checkDup(m,p,editIndex))?'block':'none';
 });
 
