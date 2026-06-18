@@ -2,63 +2,69 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
 <title>Kanban BRMobility</title>
 <style>
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{background:#050e17;font-family:'Segoe UI',Arial,sans-serif;color:#e0f0ff;min-height:100vh;padding:1.5rem}
-  h1{text-align:center;font-size:26px;font-weight:600;color:#00e5ff;letter-spacing:3px;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:center;gap:10px}
-  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:1.5rem}
-  @media(max-width:600px){.stats{grid-template-columns:repeat(2,1fr)}}
-  .stat-card{background:#0d1b2a;border:1.5px solid #00e5ff;border-radius:12px;padding:1rem;text-align:center}
-  .stat-card .num{font-size:30px;font-weight:600;color:#00e5ff}
-  .stat-card .lbl{font-size:13px;color:#8fb3c7;margin-top:4px}
-  .controls{display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
-  .controls select,.controls input{background:#0d1b2a;border:1px solid #00e5ff55;color:#e0f0ff;padding:8px 12px;border-radius:8px;font-size:14px;height:38px;outline:none}
-  .controls select:focus,.controls input:focus{border-color:#00e5ff}
-  .controls input{flex:1;min-width:140px}
-  .controls input::placeholder{color:#8fb3c7}
-  .btn-add{background:#00e5ff;color:#000;border:none;padding:8px 18px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;height:38px;white-space:nowrap}
-  .btn-add:hover{background:#00c4d9}
-  .btn-wp{background:#25d366;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;height:38px;display:flex;align-items:center;gap:6px}
-  .btn-wp:hover{background:#1da851}
-  .table-wrap{background:#0d1b2a;border:1.5px solid #00e5ff33;border-radius:12px;overflow:hidden}
-  table{width:100%;border-collapse:collapse;font-size:14px}
-  thead tr{background:#001f33}
-  th{padding:11px 16px;text-align:left;color:#00e5ff;font-weight:600;font-size:13px;border-bottom:1px solid #00e5ff33}
-  td{padding:10px 16px;color:#e0f0ff;border-bottom:0.5px solid #00e5ff18}
-  tr:last-child td{border-bottom:none}
-  tr:hover td{background:#00e5ff08}
-  .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600}
-  .b-prod{background:#0f3a2a;color:#4ade80;border:1px solid #4ade8044}
-  .b-test{background:#2a1f00;color:#fbbf24;border:1px solid #fbbf2444}
-  .b-standby{background:#2a0a0a;color:#f87171;border:1px solid #f8717144}
-  .b-imp{background:#0a1a2a;color:#60a5fa;border:1px solid #60a5fa44}
-  .b-agt{background:#1a0a2a;color:#c084fc;border:1px solid #c084fc44}
-  .b-aginsumo{background:#1a1500;color:#facc15;border:1px solid #facc1544}
-  .b-disp{background:#0a1f0a;color:#86efac;border:1px solid #86efac44}
-  .b-other{background:#1a1a1a;color:#94a3b8;border:1px solid #94a3b844}
-  .btn-del{background:none;border:none;color:#f87171;cursor:pointer;font-size:15px;padding:2px 8px;border-radius:4px}
-  .btn-del:hover{background:#f8717122}
-  .modal-bg{display:none;position:fixed;inset:0;background:#000b;z-index:100;align-items:center;justify-content:center}
-  .modal-bg.open{display:flex}
-  .modal{background:#0d1b2a;border:1.5px solid #00e5ff;border-radius:14px;padding:1.5rem;width:370px;max-width:95vw}
-  .modal h2{color:#00e5ff;font-size:18px;font-weight:600;margin-bottom:1rem}
-  .modal label{font-size:13px;color:#8fb3c7;display:block;margin-bottom:4px;margin-top:12px}
-  .modal select,.modal input{width:100%;background:#001f33;border:1px solid #00e5ff44;color:#e0f0ff;padding:8px 12px;border-radius:8px;font-size:14px;outline:none}
-  .modal select:focus,.modal input:focus{border-color:#00e5ff}
-  .modal-btns{display:flex;gap:10px;margin-top:1.25rem;justify-content:flex-end}
-  .btn-cancel{background:none;border:1px solid #00e5ff44;color:#8fb3c7;padding:7px 16px;border-radius:8px;cursor:pointer;font-size:14px}
-  .btn-cancel:hover{background:#00e5ff11}
-  .btn-save{background:#00e5ff;color:#000;border:none;padding:7px 16px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer}
-  .btn-save:hover{background:#00c4d9}
-  .modal-wp{background:#0d1b2a;border:1.5px solid #25d366;border-radius:14px;padding:1.5rem;width:500px;max-width:95vw}
-  .modal-wp h2{color:#25d366;font-size:18px;font-weight:600;margin-bottom:1rem}
-  .msg-box{background:#001f33;border:1px solid #25d36644;border-radius:8px;padding:1rem;font-size:13px;color:#e0f0ff;white-space:pre-wrap;max-height:340px;overflow-y:auto;line-height:1.7}
-  .btn-copy{background:#25d366;color:#fff;border:none;padding:7px 16px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px}
-  .btn-copy:hover{background:#1da851}
-  .empty{text-align:center;padding:2.5rem;color:#8fb3c7;font-size:14px}
-  .count-info{font-size:13px;color:#8fb3c7;margin-bottom:10px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#050e17;font-family:'Segoe UI',Arial,sans-serif;color:#e0f0ff;min-height:100vh;padding:1rem}
+h1{text-align:center;font-size:20px;font-weight:700;color:#00e5ff;letter-spacing:2px;margin-bottom:1.2rem}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:1.2rem}
+@media(min-width:500px){.stats{grid-template-columns:repeat(4,1fr)}}
+.stat-card{background:#0d1b2a;border:1.5px solid #00e5ff;border-radius:12px;padding:.9rem;text-align:center}
+.stat-card .num{font-size:28px;font-weight:700;color:#00e5ff}
+.stat-card .lbl{font-size:12px;color:#8fb3c7;margin-top:3px}
+.controls{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.controls select,.controls input{background:#0d1b2a;border:1px solid #00e5ff55;color:#e0f0ff;padding:9px 10px;border-radius:8px;font-size:14px;flex:1;min-width:0;height:42px;-webkit-appearance:none;appearance:none}
+.controls select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2300e5ff' d='M6 8L0 0h12z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+.controls input::placeholder{color:#8fb3c7}
+.btn-add{background:#00e5ff;color:#000;border:none;padding:0 16px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;height:42px;white-space:nowrap;width:100%}
+.btn-add:active{background:#00b8cc}
+.btn-wp{background:#25d366;color:#fff;border:none;padding:0 16px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;height:42px;width:100%}
+.btn-wp:active{background:#1aa34a}
+.count-info{font-size:12px;color:#8fb3c7;margin-bottom:8px}
+.table-wrap{background:#0d1b2a;border:1.5px solid #00e5ff33;border-radius:12px;overflow:hidden;overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:320px}
+thead tr{background:#001f33}
+th{padding:10px 10px;text-align:left;color:#00e5ff;font-weight:700;font-size:12px;border-bottom:1px solid #00e5ff33;white-space:nowrap}
+td{padding:10px 10px;color:#e0f0ff;border-bottom:0.5px solid #00e5ff18;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+.badge{display:inline-block;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap}
+.b-prod{background:#0f3a2a;color:#4ade80;border:1px solid #4ade8044}
+.b-test{background:#2a1f00;color:#fbbf24;border:1px solid #fbbf2444}
+.b-standby{background:#2a0a0a;color:#f87171;border:1px solid #f8717144}
+.b-imp{background:#0a1a2a;color:#60a5fa;border:1px solid #60a5fa44}
+.b-agt{background:#1a0a2a;color:#c084fc;border:1px solid #c084fc44}
+.b-aginsumo{background:#1a1500;color:#facc15;border:1px solid #facc1544}
+.b-disp{background:#0a1f0a;color:#86efac;border:1px solid #86efac44}
+.b-other{background:#1a1a1a;color:#94a3b8;border:1px solid #94a3b844}
+.action-btns{display:flex;gap:4px}
+.btn-edit,.btn-del{background:none;border:none;cursor:pointer;font-size:15px;padding:4px 6px;border-radius:4px;line-height:1}
+.btn-edit{color:#00e5ff}
+.btn-edit:active{background:#00e5ff22}
+.btn-del{color:#f87171}
+.btn-del:active{background:#f8717122}
+.empty{text-align:center;padding:2rem;color:#8fb3c7;font-size:14px}
+.modal-bg{display:none;position:fixed;inset:0;background:#000c;z-index:100;align-items:flex-end;justify-content:center}
+@media(min-width:500px){.modal-bg{align-items:center}}
+.modal-bg.open{display:flex}
+.modal{background:#0d1b2a;border:1.5px solid #00e5ff;border-radius:16px 16px 0 0;padding:1.5rem 1.2rem;width:100%;max-width:460px;max-height:90vh;overflow-y:auto}
+@media(min-width:500px){.modal{border-radius:16px;max-height:85vh}}
+.modal h2{color:#00e5ff;font-size:17px;font-weight:700;margin-bottom:1rem}
+.modal label{font-size:13px;color:#8fb3c7;display:block;margin-bottom:4px;margin-top:12px}
+.modal select,.modal input{width:100%;background:#001f33;border:1px solid #00e5ff44;color:#e0f0ff;padding:10px 12px;border-radius:8px;font-size:15px;-webkit-appearance:none;appearance:none;height:44px}
+.modal select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2300e5ff' d='M6 8L0 0h12z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+.modal-btns{display:flex;gap:10px;margin-top:1.25rem}
+.btn-cancel{background:none;border:1px solid #00e5ff44;color:#8fb3c7;padding:0;border-radius:8px;cursor:pointer;font-size:14px;flex:1;height:44px}
+.btn-save{background:#00e5ff;color:#000;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;flex:2;height:44px}
+.btn-save:active{background:#00b8cc}
+.modal-wp{background:#0d1b2a;border:1.5px solid #25d366;border-radius:16px 16px 0 0;padding:1.5rem 1.2rem;width:100%;max-width:520px;max-height:90vh;overflow-y:auto}
+@media(min-width:500px){.modal-wp{border-radius:16px;max-height:85vh}}
+.modal-wp h2{color:#25d366;font-size:17px;font-weight:700;margin-bottom:1rem}
+.msg-box{background:#001f33;border:1px solid #25d36644;border-radius:8px;padding:1rem;font-size:13px;color:#e0f0ff;white-space:pre-wrap;max-height:300px;overflow-y:auto;line-height:1.7}
+.btn-copy{background:#25d366;color:#fff;border:none;padding:0;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;flex:2;height:44px}
+.btn-copy:active{background:#1aa34a}
+.warn-box{background:#2a1500;border:1px solid #f97316;border-radius:8px;padding:10px 12px;font-size:13px;color:#fb923c;margin-top:10px;display:none}
+.inline-select{background:#001f33;border:1px solid #00e5ff44;color:#e0f0ff;padding:4px 6px;border-radius:6px;font-size:12px;-webkit-appearance:none;appearance:none;max-width:140px}
 </style>
 </head>
 <body>
@@ -73,34 +79,35 @@
 </div>
 
 <div class="controls">
-  <select id="fModelo"><option value="">Modelo</option></select>
-  <input id="fPat" placeholder="Patrimônio" />
-  <select id="fStatus"><option value="">Status</option></select>
-  <button class="btn-add" onclick="openAdd()">+ Adicionar Veículo</button>
+  <select id="fModelo" style="flex:1"><option value="">Modelo</option></select>
+  <input id="fPat" placeholder="Patrimônio" style="flex:1" />
+  <select id="fStatus" style="flex:1"><option value="">Status</option></select>
 </div>
 <div class="controls">
-  <button class="btn-wp" onclick="openWP()">📋 Gerar Relatório WhatsApp</button>
-  <span class="count-info" id="countInfo"></span>
+  <button class="btn-add" onclick="openAdd()">+ Adicionar Veículo</button>
+  <button class="btn-wp" onclick="openWP()">📋 Relatório WhatsApp</button>
 </div>
+<div class="count-info" id="countInfo"></div>
 
 <div class="table-wrap">
   <table>
     <thead>
-      <tr><th>Modelo</th><th>Patrimônio</th><th>Status</th><th style="width:50px"></th></tr>
+      <tr><th>Modelo</th><th>Patrimônio</th><th>Status</th><th style="width:72px">Ações</th></tr>
     </thead>
     <tbody id="tbody"></tbody>
   </table>
   <div class="empty" id="empty" style="display:none">Nenhum veículo encontrado.</div>
 </div>
 
-<!-- Modal Adicionar -->
+<!-- Modal Adicionar/Editar -->
 <div class="modal-bg" id="modalAdd">
   <div class="modal">
-    <h2>Adicionar Veículo</h2>
+    <h2 id="modalTitle">Adicionar Veículo</h2>
+    <div class="warn-box" id="warnDup">⚠️ Já existe um veículo com este modelo e patrimônio!</div>
     <label>Modelo</label>
-    <input id="inModelo" placeholder="Ex: S8, S9, BR8..." />
+    <input id="inModelo" placeholder="Ex: S8, S9, BR8..." autocomplete="off" />
     <label>Patrimônio</label>
-    <input id="inPat" placeholder="Ex: 0123" />
+    <input id="inPat" placeholder="Ex: 0123" autocomplete="off" inputmode="text" />
     <label>Status</label>
     <select id="inStatus">
       <option value="Em Produção">Em Produção</option>
@@ -118,7 +125,7 @@
     </select>
     <div class="modal-btns">
       <button class="btn-cancel" onclick="closeAdd()">Cancelar</button>
-      <button class="btn-save" onclick="saveVehicle()">Salvar</button>
+      <button class="btn-save" id="btnSave" onclick="saveVehicle()">Salvar</button>
     </div>
   </div>
 </div>
@@ -136,9 +143,10 @@
 </div>
 
 <script>
-const STORAGE_KEY = 'brmobility_veiculos_v2';
+const STORAGE_KEY='brmobility_v3';
+const STATUS_LIST=['Em Produção','Em Teste','Stand By','Implementado','Aguardando Manutenção','Aguardando Insumos','Disponível','Emergencial','Em Manutenção','Em Vistoria','Inativo','Previsto'];
 
-const INITIAL = [
+const INITIAL=[
   {modelo:'BR8',patrimonio:'0143',status:'Aguardando Insumos'},
   {modelo:'BR8',patrimonio:'0177',status:'Em Teste'},
   {modelo:'H9',patrimonio:'1041',status:'Aguardando Manutenção'},
@@ -288,30 +296,30 @@ const INITIAL = [
 ];
 
 function load(){
-  try{
-    const d=localStorage.getItem(STORAGE_KEY);
-    if(d) return JSON.parse(d);
-  }catch(e){}
+  try{const d=localStorage.getItem(STORAGE_KEY);if(d)return JSON.parse(d);}catch(e){}
   return JSON.parse(JSON.stringify(INITIAL));
 }
-
-function save(data){
-  try{localStorage.setItem(STORAGE_KEY,JSON.stringify(data));}catch(e){}
-}
+function save(data){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(data));}catch(e){}}
 
 let vehicles=load();
+let editIndex=-1;
 
 function badgeClass(s){
-  if(!s) return 'b-other';
+  if(!s)return 'b-other';
   const l=s.toLowerCase();
-  if(l.includes('produção')) return 'b-prod';
-  if(l.includes('teste')||l.includes('vistoria')) return 'b-test';
-  if(l.includes('stand by')||l.includes('standby')) return 'b-standby';
-  if(l.includes('implementado')) return 'b-imp';
-  if(l.includes('manutenção')) return 'b-agt';
-  if(l.includes('insumo')) return 'b-aginsumo';
-  if(l.includes('disponível')||l.includes('disponivel')) return 'b-disp';
+  if(l.includes('produção'))return 'b-prod';
+  if(l.includes('teste')||l.includes('vistoria'))return 'b-test';
+  if(l.includes('stand by')||l.includes('standby'))return 'b-standby';
+  if(l.includes('implementado'))return 'b-imp';
+  if(l.includes('manutenção'))return 'b-agt';
+  if(l.includes('insumo'))return 'b-aginsumo';
+  if(l.includes('disponível')||l.includes('disponivel'))return 'b-disp';
   return 'b-other';
+}
+
+function statusSelectHTML(currentVal, idx){
+  const opts=STATUS_LIST.map(s=>`<option value="${s}"${s===currentVal?' selected':''}>${s}</option>`).join('');
+  return `<select class="inline-select" onchange="changeStatus(${idx},this.value)">${opts}</select>`;
 }
 
 function render(){
@@ -319,10 +327,10 @@ function render(){
   const fp=document.getElementById('fPat').value.toLowerCase();
   const fs=document.getElementById('fStatus').value;
 
-  const filtered=vehicles.filter(v=>{
-    if(fm && v.modelo!==fm) return false;
-    if(fp && !v.patrimonio.toLowerCase().includes(fp)) return false;
-    if(fs && v.status!==fs) return false;
+  const filtered=vehicles.map((v,i)=>({...v,_i:i})).filter(v=>{
+    if(fm && v.modelo!==fm)return false;
+    if(fp && !v.patrimonio.toLowerCase().includes(fp))return false;
+    if(fs && v.status!==fs)return false;
     return true;
   });
 
@@ -335,46 +343,84 @@ function render(){
   const statuses=[...new Set(vehicles.map(v=>v.status))].sort();
   const selMod=document.getElementById('fModelo');
   const selStat=document.getElementById('fStatus');
-  const curMod=selMod.value, curStat=selStat.value;
+  const curMod=selMod.value,curStat=selStat.value;
   selMod.innerHTML='<option value="">Modelo</option>'+modelos.map(m=>`<option value="${m}"${m===curMod?' selected':''}>${m}</option>`).join('');
   selStat.innerHTML='<option value="">Status</option>'+statuses.map(s=>`<option value="${s}"${s===curStat?' selected':''}>${s}</option>`).join('');
 
-  document.getElementById('countInfo').textContent=filtered.length+' veículo(s) exibido(s)';
+  document.getElementById('countInfo').textContent=filtered.length+' veículo(s) exibido(s) de '+vehicles.length+' total';
 
   const tbody=document.getElementById('tbody');
   const empty=document.getElementById('empty');
   if(filtered.length===0){tbody.innerHTML='';empty.style.display='block';return;}
   empty.style.display='none';
-  tbody.innerHTML=filtered.map(v=>{
-    const ri=vehicles.indexOf(v);
-    return `<tr>
-      <td style="font-weight:600">${v.modelo}</td>
-      <td>${v.patrimonio}</td>
-      <td><span class="badge ${badgeClass(v.status)}">${v.status}</span></td>
-      <td><button class="btn-del" onclick="del(${ri})" title="Remover">✕</button></td>
-    </tr>`;
-  }).join('');
+  tbody.innerHTML=filtered.map(v=>`<tr>
+    <td style="font-weight:700">${v.modelo}</td>
+    <td>${v.patrimonio}</td>
+    <td>${statusSelectHTML(v.status,v._i)}</td>
+    <td><div class="action-btns">
+      <button class="btn-edit" onclick="openEdit(${v._i})" title="Editar">✏️</button>
+      <button class="btn-del" onclick="del(${v._i})" title="Remover">✕</button>
+    </div></td>
+  </tr>`).join('');
+}
+
+function changeStatus(i, val){
+  vehicles[i].status=val;
+  save(vehicles);
+  render();
 }
 
 function del(i){
-  if(!confirm('Remover este veículo?')) return;
+  if(!confirm('Remover '+vehicles[i].modelo+' - '+vehicles[i].patrimonio+'?'))return;
   vehicles.splice(i,1);
   save(vehicles);
   render();
 }
 
-function openAdd(){document.getElementById('modalAdd').classList.add('open');}
+function openAdd(){
+  editIndex=-1;
+  document.getElementById('modalTitle').textContent='Adicionar Veículo';
+  document.getElementById('btnSave').textContent='Salvar';
+  document.getElementById('inModelo').value='';
+  document.getElementById('inPat').value='';
+  document.getElementById('inStatus').value='Em Produção';
+  document.getElementById('warnDup').style.display='none';
+  document.getElementById('modalAdd').classList.add('open');
+  setTimeout(()=>document.getElementById('inModelo').focus(),100);
+}
+
+function openEdit(i){
+  editIndex=i;
+  const v=vehicles[i];
+  document.getElementById('modalTitle').textContent='Editar Veículo';
+  document.getElementById('btnSave').textContent='Atualizar';
+  document.getElementById('inModelo').value=v.modelo;
+  document.getElementById('inPat').value=v.patrimonio;
+  document.getElementById('inStatus').value=v.status;
+  document.getElementById('warnDup').style.display='none';
+  document.getElementById('modalAdd').classList.add('open');
+}
+
 function closeAdd(){document.getElementById('modalAdd').classList.remove('open');}
+
+function checkDup(m,p,skipIdx){
+  return vehicles.some((v,i)=>i!==skipIdx && v.modelo===m && v.patrimonio===p);
+}
 
 function saveVehicle(){
   const m=document.getElementById('inModelo').value.trim().toUpperCase();
   const p=document.getElementById('inPat').value.trim();
   const s=document.getElementById('inStatus').value;
   if(!m||!p){alert('Preencha modelo e patrimônio.');return;}
-  vehicles.push({modelo:m,patrimonio:p,status:s});
+  const dup=checkDup(m,p,editIndex);
+  document.getElementById('warnDup').style.display=dup?'block':'none';
+  if(dup)return;
+  if(editIndex>=0){
+    vehicles[editIndex]={modelo:m,patrimonio:p,status:s};
+  } else {
+    vehicles.push({modelo:m,patrimonio:p,status:s});
+  }
   save(vehicles);
-  document.getElementById('inModelo').value='';
-  document.getElementById('inPat').value='';
   closeAdd();
   render();
 }
@@ -385,19 +431,8 @@ function openWP(){
   const mes=String(now.getMonth()+1).padStart(2,'0');
   const ano=now.getFullYear();
   const data=`${dia}/${mes}/${ano}`;
-
-  const prods=vehicles.filter(v=>v.status==='Em Produção');
-  const tests=vehicles.filter(v=>v.status==='Em Teste');
-  const sbs=vehicles.filter(v=>v.status==='Stand By');
-
-  let lista='';
-  prods.forEach(v=>lista+=`${v.modelo}-${v.patrimonio}; Em produção\n`);
-  tests.forEach(v=>lista+=`${v.modelo}-${v.patrimonio}; Em fase de testes\n`);
-  sbs.forEach(v=>lista+=`${v.modelo}-${v.patrimonio}; Stand by\n`);
-
-  if(!lista) lista='(Nenhum veículo em Produção, Teste ou Stand By no momento)\n';
-
-  const msg=`Olá, senhores (as).\nSegue relatório atualizado em ${data} da produção de veículos realizado pelo departamento técnico.\n\n${lista.trim()}\n\nOs veículos em *Stand by* seguem sem carregadores e com OS Disponível no Eloca.\nObrigado.`;
+  const lista=vehicles.map(v=>`${v.modelo}-${v.patrimonio}; ${v.status}`).join('\n');
+  const msg=`Olá, senhores (as).\nSegue relatório atualizado em ${data} da produção de veículos realizado pelo departamento técnico.\n\n${lista}\n\nOs veículos em *Stand by* seguem sem carregadores e com OS Disponível no Eloca.\nObrigado.`;
   document.getElementById('wpMsg').textContent=msg;
   document.getElementById('modalWP').classList.add('open');
 }
@@ -406,11 +441,22 @@ function closeWP(){document.getElementById('modalWP').classList.remove('open');}
 
 function copyMsg(){
   const txt=document.getElementById('wpMsg').textContent;
-  navigator.clipboard.writeText(txt).then(()=>{
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(txt).then(()=>{
+      const btn=document.getElementById('btnCopy');
+      btn.textContent='✓ Copiado!';
+      setTimeout(()=>{btn.textContent='📋 Copiar';},2000);
+    });
+  } else {
+    const ta=document.createElement('textarea');
+    ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
     const btn=document.getElementById('btnCopy');
     btn.textContent='✓ Copiado!';
     setTimeout(()=>{btn.textContent='📋 Copiar';},2000);
-  });
+  }
 }
 
 document.getElementById('fModelo').onchange=render;
@@ -418,6 +464,17 @@ document.getElementById('fStatus').onchange=render;
 document.getElementById('fPat').oninput=render;
 document.getElementById('modalAdd').addEventListener('click',function(e){if(e.target===this)closeAdd();});
 document.getElementById('modalWP').addEventListener('click',function(e){if(e.target===this)closeWP();});
+
+document.getElementById('inModelo').addEventListener('input',function(){
+  const m=this.value.trim().toUpperCase();
+  const p=document.getElementById('inPat').value.trim();
+  document.getElementById('warnDup').style.display=(m&&p&&checkDup(m,p,editIndex))?'block':'none';
+});
+document.getElementById('inPat').addEventListener('input',function(){
+  const p=this.value.trim();
+  const m=document.getElementById('inModelo').value.trim().toUpperCase();
+  document.getElementById('warnDup').style.display=(m&&p&&checkDup(m,p,editIndex))?'block':'none';
+});
 
 render();
 </script>
