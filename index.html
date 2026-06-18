@@ -1,151 +1,425 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Kanban BRMobility</title>
-
-<link rel="stylesheet" href="style.css">
-
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyCsoi-us9x6va-QTygJVWIXi9k_nLta8Ls",
-  authDomain: "kanban-brmobility.firebaseapp.com",
-  projectId: "kanban-brmobility",
-  storageBucket: "kanban-brmobility.firebasestorage.app",
-  messagingSenderId: "792111549567",
-  appId: "1:792111549567:web:571f171f254a89a92c834a",
-  measurementId: "G-Y2L1ZLGEHG"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-window.db = db;
-</script>
-
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#050e17;font-family:'Segoe UI',Arial,sans-serif;color:#e0f0ff;min-height:100vh;padding:1.5rem}
+  h1{text-align:center;font-size:26px;font-weight:600;color:#00e5ff;letter-spacing:3px;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:center;gap:10px}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:1.5rem}
+  @media(max-width:600px){.stats{grid-template-columns:repeat(2,1fr)}}
+  .stat-card{background:#0d1b2a;border:1.5px solid #00e5ff;border-radius:12px;padding:1rem;text-align:center}
+  .stat-card .num{font-size:30px;font-weight:600;color:#00e5ff}
+  .stat-card .lbl{font-size:13px;color:#8fb3c7;margin-top:4px}
+  .controls{display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+  .controls select,.controls input{background:#0d1b2a;border:1px solid #00e5ff55;color:#e0f0ff;padding:8px 12px;border-radius:8px;font-size:14px;height:38px;outline:none}
+  .controls select:focus,.controls input:focus{border-color:#00e5ff}
+  .controls input{flex:1;min-width:140px}
+  .controls input::placeholder{color:#8fb3c7}
+  .btn-add{background:#00e5ff;color:#000;border:none;padding:8px 18px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;height:38px;white-space:nowrap}
+  .btn-add:hover{background:#00c4d9}
+  .btn-wp{background:#25d366;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;height:38px;display:flex;align-items:center;gap:6px}
+  .btn-wp:hover{background:#1da851}
+  .table-wrap{background:#0d1b2a;border:1.5px solid #00e5ff33;border-radius:12px;overflow:hidden}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  thead tr{background:#001f33}
+  th{padding:11px 16px;text-align:left;color:#00e5ff;font-weight:600;font-size:13px;border-bottom:1px solid #00e5ff33}
+  td{padding:10px 16px;color:#e0f0ff;border-bottom:0.5px solid #00e5ff18}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:#00e5ff08}
+  .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600}
+  .b-prod{background:#0f3a2a;color:#4ade80;border:1px solid #4ade8044}
+  .b-test{background:#2a1f00;color:#fbbf24;border:1px solid #fbbf2444}
+  .b-standby{background:#2a0a0a;color:#f87171;border:1px solid #f8717144}
+  .b-imp{background:#0a1a2a;color:#60a5fa;border:1px solid #60a5fa44}
+  .b-agt{background:#1a0a2a;color:#c084fc;border:1px solid #c084fc44}
+  .b-aginsumo{background:#1a1500;color:#facc15;border:1px solid #facc1544}
+  .b-disp{background:#0a1f0a;color:#86efac;border:1px solid #86efac44}
+  .b-other{background:#1a1a1a;color:#94a3b8;border:1px solid #94a3b844}
+  .btn-del{background:none;border:none;color:#f87171;cursor:pointer;font-size:15px;padding:2px 8px;border-radius:4px}
+  .btn-del:hover{background:#f8717122}
+  .modal-bg{display:none;position:fixed;inset:0;background:#000b;z-index:100;align-items:center;justify-content:center}
+  .modal-bg.open{display:flex}
+  .modal{background:#0d1b2a;border:1.5px solid #00e5ff;border-radius:14px;padding:1.5rem;width:370px;max-width:95vw}
+  .modal h2{color:#00e5ff;font-size:18px;font-weight:600;margin-bottom:1rem}
+  .modal label{font-size:13px;color:#8fb3c7;display:block;margin-bottom:4px;margin-top:12px}
+  .modal select,.modal input{width:100%;background:#001f33;border:1px solid #00e5ff44;color:#e0f0ff;padding:8px 12px;border-radius:8px;font-size:14px;outline:none}
+  .modal select:focus,.modal input:focus{border-color:#00e5ff}
+  .modal-btns{display:flex;gap:10px;margin-top:1.25rem;justify-content:flex-end}
+  .btn-cancel{background:none;border:1px solid #00e5ff44;color:#8fb3c7;padding:7px 16px;border-radius:8px;cursor:pointer;font-size:14px}
+  .btn-cancel:hover{background:#00e5ff11}
+  .btn-save{background:#00e5ff;color:#000;border:none;padding:7px 16px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer}
+  .btn-save:hover{background:#00c4d9}
+  .modal-wp{background:#0d1b2a;border:1.5px solid #25d366;border-radius:14px;padding:1.5rem;width:500px;max-width:95vw}
+  .modal-wp h2{color:#25d366;font-size:18px;font-weight:600;margin-bottom:1rem}
+  .msg-box{background:#001f33;border:1px solid #25d36644;border-radius:8px;padding:1rem;font-size:13px;color:#e0f0ff;white-space:pre-wrap;max-height:340px;overflow-y:auto;line-height:1.7}
+  .btn-copy{background:#25d366;color:#fff;border:none;padding:7px 16px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px}
+  .btn-copy:hover{background:#1da851}
+  .empty{text-align:center;padding:2.5rem;color:#8fb3c7;font-size:14px}
+  .count-info{font-size:13px;color:#8fb3c7;margin-bottom:10px}
+</style>
 </head>
-
 <body>
 
-<div class="container">
+<h1>⚡ KANBAN BRMOBILITY</h1>
 
-    <h1>⚡ KANBAN BRMOBILITY</h1>
-
-    <div class="dashboard">
-
-        <div class="card">
-            <span id="totalVeiculos">0</span>
-            <p>Total Veículos</p>
-        </div>
-
-        <div class="card">
-            <span id="totalProducao">0</span>
-            <p>Em Produção</p>
-        </div>
-
-        <div class="card">
-            <span id="totalTeste">0</span>
-            <p>Em Teste</p>
-        </div>
-
-        <div class="card">
-            <span id="totalStandby">0</span>
-            <p>Stand By</p>
-        </div>
-
-    </div>
-
-    <div class="formulario">
-
-        <select id="modelo">
-
-            <option value="">Modelo</option>
-
-            <option>S8</option>
-            <option>R8</option>
-            <option>BR8</option>
-            <option>S9</option>
-            <option>S9X</option>
-            <option>H9</option>
-            <option>H9X</option>
-            <option>I3</option>
-            <option>X3</option>
-            <option>I2</option>
-            <option>X2</option>
-            <option>S10</option>
-            <option>S10X</option>
-            <option>S6</option>
-
-        </select>
-
-        <input
-            type="text"
-            id="patrimonio"
-            placeholder="Patrimônio">
-
-        <select id="status">
-
-            <option value="">Status</option>
-
-            <option>Kanban</option>
-            <option>Em Produção</option>
-            <option>Em Teste</option>
-            <option>Em Vistoria</option>
-            <option>Stand By</option>
-            <option>Aguardando Peça</option>
-
-        </select>
-
-        <button id="btnAdicionar">
-            Adicionar Veículo
-        </button>
-
-    </div>
-
-    <div class="acoes">
-
-        <button id="btnRelatorio">
-            📋 Gerar Relatório WhatsApp
-        </button>
-
-    </div>
-
-    <div class="relatorio">
-
-        <textarea
-            id="textoRelatorio"
-            rows="12"
-            readonly>
-        </textarea>
-
-    </div>
-
-    <table>
-
-        <thead>
-            <tr>
-                <th>Modelo</th>
-                <th>Patrimônio</th>
-                <th>Status</th>
-                <th>Data</th>
-                <th>Ação</th>
-            </tr>
-        </thead>
-
-        <tbody id="tabelaVeiculos">
-
-        </tbody>
-
-    </table>
-
+<div class="stats">
+  <div class="stat-card"><div class="num" id="tot">0</div><div class="lbl">Total Veículos</div></div>
+  <div class="stat-card"><div class="num" id="nprod">0</div><div class="lbl">Em Produção</div></div>
+  <div class="stat-card"><div class="num" id="nteste">0</div><div class="lbl">Em Teste</div></div>
+  <div class="stat-card"><div class="num" id="nstandby">0</div><div class="lbl">Stand By</div></div>
 </div>
 
-<script type="module" src="script.js"></script>
+<div class="controls">
+  <select id="fModelo"><option value="">Modelo</option></select>
+  <input id="fPat" placeholder="Patrimônio" />
+  <select id="fStatus"><option value="">Status</option></select>
+  <button class="btn-add" onclick="openAdd()">+ Adicionar Veículo</button>
+</div>
+<div class="controls">
+  <button class="btn-wp" onclick="openWP()">📋 Gerar Relatório WhatsApp</button>
+  <span class="count-info" id="countInfo"></span>
+</div>
 
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Modelo</th><th>Patrimônio</th><th>Status</th><th style="width:50px"></th></tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+  <div class="empty" id="empty" style="display:none">Nenhum veículo encontrado.</div>
+</div>
+
+<!-- Modal Adicionar -->
+<div class="modal-bg" id="modalAdd">
+  <div class="modal">
+    <h2>Adicionar Veículo</h2>
+    <label>Modelo</label>
+    <input id="inModelo" placeholder="Ex: S8, S9, BR8..." />
+    <label>Patrimônio</label>
+    <input id="inPat" placeholder="Ex: 0123" />
+    <label>Status</label>
+    <select id="inStatus">
+      <option value="Em Produção">Em Produção</option>
+      <option value="Em Teste">Em Teste</option>
+      <option value="Stand By">Stand By</option>
+      <option value="Implementado">Implementado</option>
+      <option value="Aguardando Manutenção">Aguardando Manutenção</option>
+      <option value="Aguardando Insumos">Aguardando Insumos</option>
+      <option value="Disponível">Disponível</option>
+      <option value="Emergencial">Emergencial</option>
+      <option value="Em Manutenção">Em Manutenção</option>
+      <option value="Em Vistoria">Em Vistoria</option>
+      <option value="Inativo">Inativo</option>
+      <option value="Previsto">Previsto</option>
+    </select>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeAdd()">Cancelar</button>
+      <button class="btn-save" onclick="saveVehicle()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal WhatsApp -->
+<div class="modal-bg" id="modalWP">
+  <div class="modal-wp">
+    <h2>📋 Relatório WhatsApp</h2>
+    <div class="msg-box" id="wpMsg"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeWP()">Fechar</button>
+      <button class="btn-copy" id="btnCopy" onclick="copyMsg()">📋 Copiar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'brmobility_veiculos_v2';
+
+const INITIAL = [
+  {modelo:'BR8',patrimonio:'0143',status:'Aguardando Insumos'},
+  {modelo:'BR8',patrimonio:'0177',status:'Em Teste'},
+  {modelo:'H9',patrimonio:'1041',status:'Aguardando Manutenção'},
+  {modelo:'H9',patrimonio:'1039',status:'Implementado'},
+  {modelo:'H9',patrimonio:'1042',status:'Aguardando Manutenção'},
+  {modelo:'BR8',patrimonio:'0439',status:'Implementado'},
+  {modelo:'H9',patrimonio:'1044',status:'Aguardando Manutenção'},
+  {modelo:'H9X',patrimonio:'0763',status:'Aguardando Manutenção'},
+  {modelo:'I2',patrimonio:'0745',status:'Aguardando Manutenção'},
+  {modelo:'X2',patrimonio:'0773',status:'Implementado'},
+  {modelo:'S10',patrimonio:'1240',status:'Implementado'},
+  {modelo:'I2 MAX',patrimonio:'0420',status:'Aguardando Manutenção'},
+  {modelo:'S8',patrimonio:'0681',status:'Implementado'},
+  {modelo:'I2 MAX',patrimonio:'1013',status:'Aguardando Insumos'},
+  {modelo:'I3',patrimonio:'0791',status:'Implementado'},
+  {modelo:'R8',patrimonio:'0304',status:'Implementado'},
+  {modelo:'R8',patrimonio:'0151',status:'Implementado'},
+  {modelo:'R8',patrimonio:'0242',status:'Disponível'},
+  {modelo:'R8',patrimonio:'0181',status:'Implementado'},
+  {modelo:'R8',patrimonio:'0027',status:'Implementado'},
+  {modelo:'S10',patrimonio:'1234',status:'Aguardando Insumos'},
+  {modelo:'S10',patrimonio:'1244',status:'Implementado'},
+  {modelo:'S10',patrimonio:'1201',status:'Aguardando Manutenção'},
+  {modelo:'BR8',patrimonio:'0436',status:'Implementado'},
+  {modelo:'S9',patrimonio:'0453',status:'Implementado'},
+  {modelo:'S9',patrimonio:'0507',status:'Implementado'},
+  {modelo:'S9',patrimonio:'0552',status:'Implementado'},
+  {modelo:'S10',patrimonio:'1272',status:'Implementado'},
+  {modelo:'S10',patrimonio:'1224',status:'Disponível'},
+  {modelo:'S6',patrimonio:'0710',status:'Em Teste'},
+  {modelo:'S8',patrimonio:'0193',status:'Implementado'},
+  {modelo:'S8',patrimonio:'0196',status:'Implementado'},
+  {modelo:'S10',patrimonio:'1273',status:'Implementado'},
+  {modelo:'S9',patrimonio:'0533',status:'Implementado'},
+  {modelo:'I2',patrimonio:'1009',status:'Implementado'},
+  {modelo:'S10',patrimonio:'1048',status:'Implementado'},
+  {modelo:'S10',patrimonio:'1254',status:'Implementado'},
+  {modelo:'S10',patrimonio:'1259',status:'Implementado'},
+  {modelo:'S10',patrimonio:'1267',status:'Implementado'},
+  {modelo:'S8',patrimonio:'0246',status:'Aguardando Insumos'},
+  {modelo:'S10X',patrimonio:'1301',status:'Previsto'},
+  {modelo:'S10X',patrimonio:'1302',status:'Implementado'},
+  {modelo:'S10X',patrimonio:'1303',status:'Implementado'},
+  {modelo:'S10X',patrimonio:'1304',status:'Implementado'},
+  {modelo:'S10X',patrimonio:'1305',status:'Implementado'},
+  {modelo:'S10X',patrimonio:'1306',status:'Implementado'},
+  {modelo:'S10X',patrimonio:'1307',status:'Disponível'},
+  {modelo:'S10',patrimonio:'1309',status:'Disponível'},
+  {modelo:'S10',patrimonio:'1310',status:'Disponível'},
+  {modelo:'H9',patrimonio:'0615',status:'Inativo'},
+  {modelo:'H9',patrimonio:'0762',status:'Inativo'},
+  {modelo:'H9',patrimonio:'0764',status:'Inativo'},
+  {modelo:'H9',patrimonio:'1043',status:'Inativo'},
+  {modelo:'H9',patrimonio:'1045',status:'Inativo'},
+  {modelo:'H9',patrimonio:'1046',status:'Inativo'},
+  {modelo:'H9',patrimonio:'1061',status:'Inativo'},
+  {modelo:'H9',patrimonio:'1065',status:'Inativo'},
+  {modelo:'H9',patrimonio:'1071',status:'Inativo'},
+  {modelo:'S8',patrimonio:'0312',status:'Implementado'},
+  {modelo:'S8',patrimonio:'0374',status:'Implementado'},
+  {modelo:'S10X',patrimonio:'1308',status:'Disponível'},
+  {modelo:'VIPS',patrimonio:'1295',status:'Implementado'},
+  {modelo:'S6',patrimonio:'0647',status:'Emergencial'},
+  {modelo:'S6',patrimonio:'0666',status:'Emergencial'},
+  {modelo:'S6',patrimonio:'0699',status:'Emergencial'},
+  {modelo:'S6',patrimonio:'0705',status:'Emergencial'},
+  {modelo:'S6',patrimonio:'0719',status:'Emergencial'},
+  {modelo:'BR8',patrimonio:'0426',status:'Implementado'},
+  {modelo:'S10',patrimonio:'1274',status:'Implementado'},
+  {modelo:'S10',patrimonio:'1277',status:'Implementado'},
+  {modelo:'S10',patrimonio:'1279',status:'Implementado'},
+  {modelo:'BR8',patrimonio:'0239',status:'Implementado'},
+  {modelo:'S9',patrimonio:'0249',status:'Implementado'},
+  {modelo:'X2',patrimonio:'0282',status:'Implementado'},
+  {modelo:'S9',patrimonio:'0248',status:'Implementado'},
+  {modelo:'BR8',patrimonio:'0318',status:'Implementado'},
+  {modelo:'BR8',patrimonio:'0360',status:'Implementado'},
+  {modelo:'BR8',patrimonio:'0364',status:'Implementado'},
+  {modelo:'S9',patrimonio:'0408',status:'Implementado'},
+  {modelo:'S9',patrimonio:'0454',status:'Implementado'},
+  {modelo:'S9',patrimonio:'0515',status:'Implementado'},
+  {modelo:'S9',patrimonio:'0523',status:'Implementado'},
+  {modelo:'S9',patrimonio:'0554',status:'Implementado'},
+  {modelo:'S6',patrimonio:'0628',status:'Emergencial'},
+  {modelo:'S8',patrimonio:'0558',status:'Implementado'},
+  {modelo:'H9X',patrimonio:'1064',status:'Implementado'},
+  {modelo:'S10',patrimonio:'1203',status:'Implementado'},
+  {modelo:'S10',patrimonio:'1206',status:'Implementado'},
+  {modelo:'S10',patrimonio:'1210',status:'Implementado'},
+  {modelo:'BR8',patrimonio:'0670',status:'Implementado'},
+  {modelo:'S10',patrimonio:'1223',status:'Implementado'},
+  {modelo:'S10',patrimonio:'1255',status:'Implementado'},
+  {modelo:'S10',patrimonio:'1264',status:'Implementado'},
+  {modelo:'S10',patrimonio:'1271',status:'Implementado'},
+  {modelo:'S10',patrimonio:'1275',status:'Implementado'},
+  {modelo:'S10X',patrimonio:'1290',status:'Implementado'},
+  {modelo:'S8',patrimonio:'0427',status:'Implementado'},
+  {modelo:'S8',patrimonio:'0556',status:'Aguardando Manutenção'},
+  {modelo:'S9',patrimonio:'0535',status:'Implementado'},
+  {modelo:'VIPS',patrimonio:'0787',status:'Disponível'},
+  {modelo:'VIPS',patrimonio:'0296',status:'Aguardando Manutenção'},
+  {modelo:'X2',patrimonio:'0999',status:'Implementado'},
+  {modelo:'S10',patrimonio:'1228',status:'Implementado'},
+  {modelo:'X2',patrimonio:'0667',status:'Aguardando Manutenção'},
+  {modelo:'X2',patrimonio:'0188',status:'Aguardando Insumos'},
+  {modelo:'S9X',patrimonio:'0243',status:'Implementado'},
+  {modelo:'S8',patrimonio:'0434',status:'Aguardando Insumos'},
+  {modelo:'BR8',patrimonio:'0221',status:'Implementado'},
+  {modelo:'S10',patrimonio:'1245',status:'Aguardando Manutenção'},
+  {modelo:'I3',patrimonio:'0603',status:'Disponível'},
+  {modelo:'S9',patrimonio:'0456',status:'Implementado'},
+  {modelo:'I2',patrimonio:'0623',status:'Implementado'},
+  {modelo:'X3',patrimonio:'0591',status:'Aguardando Insumos'},
+  {modelo:'S6',patrimonio:'0716',status:'Emergencial'},
+  {modelo:'I2',patrimonio:'0264',status:'Implementado'},
+  {modelo:'X3',patrimonio:'0796',status:'Implementado'},
+  {modelo:'H9X',patrimonio:'1057',status:'Implementado'},
+  {modelo:'X3',patrimonio:'0594',status:'Implementado'},
+  {modelo:'I3',patrimonio:'0595',status:'Aguardando Manutenção'},
+  {modelo:'S8',patrimonio:'0320',status:'Aguardando Insumos'},
+  {modelo:'S10X',patrimonio:'1291',status:'Disponível'},
+  {modelo:'S10X',patrimonio:'1258',status:'Disponível'},
+  {modelo:'H9',patrimonio:'1037',status:'Implementado'},
+  {modelo:'BR8',patrimonio:'0347',status:'Implementado'},
+  {modelo:'S8',patrimonio:'0233',status:'Aguardando Manutenção'},
+  {modelo:'BR8',patrimonio:'0201',status:'Em Teste'},
+  {modelo:'S8',patrimonio:'0437',status:'Aguardando Insumos'},
+  {modelo:'S8',patrimonio:'0379',status:'Implementado'},
+  {modelo:'BR8',patrimonio:'0156',status:'Disponível'},
+  {modelo:'S9',patrimonio:'0538',status:'Implementado'},
+  {modelo:'S8',patrimonio:'0430',status:'Aguardando Manutenção'},
+  {modelo:'S8',patrimonio:'0501',status:'Aguardando Manutenção'},
+  {modelo:'S10',patrimonio:'1204',status:'Aguardando Manutenção'},
+  {modelo:'S8',patrimonio:'0345',status:'Aguardando Manutenção'},
+  {modelo:'I2',patrimonio:'0392',status:'Em Vistoria'},
+  {modelo:'S8',patrimonio:'0191',status:'Aguardando Manutenção'},
+  {modelo:'S8',patrimonio:'0321',status:'Aguardando Manutenção'},
+  {modelo:'X3',patrimonio:'0612',status:'Aguardando Manutenção'},
+  {modelo:'BR8',patrimonio:'0192',status:'Disponível'},
+  {modelo:'BR8',patrimonio:'0171',status:'Aguardando Manutenção'},
+  {modelo:'S9',patrimonio:'0449',status:'Em Manutenção'},
+  {modelo:'S10',patrimonio:'1217',status:'Em Vistoria'},
+  {modelo:'X2',patrimonio:'0271',status:'Aguardando Manutenção'},
+  {modelo:'S9',patrimonio:'0442',status:'Aguardando Manutenção'},
+  {modelo:'BR8',patrimonio:'0721',status:'Em Vistoria'},
+  {modelo:'S9',patrimonio:'0529',status:'Implementado'},
+];
+
+function load(){
+  try{
+    const d=localStorage.getItem(STORAGE_KEY);
+    if(d) return JSON.parse(d);
+  }catch(e){}
+  return JSON.parse(JSON.stringify(INITIAL));
+}
+
+function save(data){
+  try{localStorage.setItem(STORAGE_KEY,JSON.stringify(data));}catch(e){}
+}
+
+let vehicles=load();
+
+function badgeClass(s){
+  if(!s) return 'b-other';
+  const l=s.toLowerCase();
+  if(l.includes('produção')) return 'b-prod';
+  if(l.includes('teste')||l.includes('vistoria')) return 'b-test';
+  if(l.includes('stand by')||l.includes('standby')) return 'b-standby';
+  if(l.includes('implementado')) return 'b-imp';
+  if(l.includes('manutenção')) return 'b-agt';
+  if(l.includes('insumo')) return 'b-aginsumo';
+  if(l.includes('disponível')||l.includes('disponivel')) return 'b-disp';
+  return 'b-other';
+}
+
+function render(){
+  const fm=document.getElementById('fModelo').value;
+  const fp=document.getElementById('fPat').value.toLowerCase();
+  const fs=document.getElementById('fStatus').value;
+
+  const filtered=vehicles.filter(v=>{
+    if(fm && v.modelo!==fm) return false;
+    if(fp && !v.patrimonio.toLowerCase().includes(fp)) return false;
+    if(fs && v.status!==fs) return false;
+    return true;
+  });
+
+  document.getElementById('tot').textContent=vehicles.length;
+  document.getElementById('nprod').textContent=vehicles.filter(v=>v.status==='Em Produção').length;
+  document.getElementById('nteste').textContent=vehicles.filter(v=>v.status==='Em Teste').length;
+  document.getElementById('nstandby').textContent=vehicles.filter(v=>v.status==='Stand By').length;
+
+  const modelos=[...new Set(vehicles.map(v=>v.modelo))].sort();
+  const statuses=[...new Set(vehicles.map(v=>v.status))].sort();
+  const selMod=document.getElementById('fModelo');
+  const selStat=document.getElementById('fStatus');
+  const curMod=selMod.value, curStat=selStat.value;
+  selMod.innerHTML='<option value="">Modelo</option>'+modelos.map(m=>`<option value="${m}"${m===curMod?' selected':''}>${m}</option>`).join('');
+  selStat.innerHTML='<option value="">Status</option>'+statuses.map(s=>`<option value="${s}"${s===curStat?' selected':''}>${s}</option>`).join('');
+
+  document.getElementById('countInfo').textContent=filtered.length+' veículo(s) exibido(s)';
+
+  const tbody=document.getElementById('tbody');
+  const empty=document.getElementById('empty');
+  if(filtered.length===0){tbody.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  tbody.innerHTML=filtered.map(v=>{
+    const ri=vehicles.indexOf(v);
+    return `<tr>
+      <td style="font-weight:600">${v.modelo}</td>
+      <td>${v.patrimonio}</td>
+      <td><span class="badge ${badgeClass(v.status)}">${v.status}</span></td>
+      <td><button class="btn-del" onclick="del(${ri})" title="Remover">✕</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function del(i){
+  if(!confirm('Remover este veículo?')) return;
+  vehicles.splice(i,1);
+  save(vehicles);
+  render();
+}
+
+function openAdd(){document.getElementById('modalAdd').classList.add('open');}
+function closeAdd(){document.getElementById('modalAdd').classList.remove('open');}
+
+function saveVehicle(){
+  const m=document.getElementById('inModelo').value.trim().toUpperCase();
+  const p=document.getElementById('inPat').value.trim();
+  const s=document.getElementById('inStatus').value;
+  if(!m||!p){alert('Preencha modelo e patrimônio.');return;}
+  vehicles.push({modelo:m,patrimonio:p,status:s});
+  save(vehicles);
+  document.getElementById('inModelo').value='';
+  document.getElementById('inPat').value='';
+  closeAdd();
+  render();
+}
+
+function openWP(){
+  const now=new Date();
+  const dia=String(now.getDate()).padStart(2,'0');
+  const mes=String(now.getMonth()+1).padStart(2,'0');
+  const ano=now.getFullYear();
+  const data=`${dia}/${mes}/${ano}`;
+
+  const prods=vehicles.filter(v=>v.status==='Em Produção');
+  const tests=vehicles.filter(v=>v.status==='Em Teste');
+  const sbs=vehicles.filter(v=>v.status==='Stand By');
+
+  let lista='';
+  prods.forEach(v=>lista+=`${v.modelo}-${v.patrimonio}; Em produção\n`);
+  tests.forEach(v=>lista+=`${v.modelo}-${v.patrimonio}; Em fase de testes\n`);
+  sbs.forEach(v=>lista+=`${v.modelo}-${v.patrimonio}; Stand by\n`);
+
+  if(!lista) lista='(Nenhum veículo em Produção, Teste ou Stand By no momento)\n';
+
+  const msg=`Olá, senhores (as).\nSegue relatório atualizado em ${data} da produção de veículos realizado pelo departamento técnico.\n\n${lista.trim()}\n\nOs veículos em *Stand by* seguem sem carregadores e com OS Disponível no Eloca.\nObrigado.`;
+  document.getElementById('wpMsg').textContent=msg;
+  document.getElementById('modalWP').classList.add('open');
+}
+
+function closeWP(){document.getElementById('modalWP').classList.remove('open');}
+
+function copyMsg(){
+  const txt=document.getElementById('wpMsg').textContent;
+  navigator.clipboard.writeText(txt).then(()=>{
+    const btn=document.getElementById('btnCopy');
+    btn.textContent='✓ Copiado!';
+    setTimeout(()=>{btn.textContent='📋 Copiar';},2000);
+  });
+}
+
+document.getElementById('fModelo').onchange=render;
+document.getElementById('fStatus').onchange=render;
+document.getElementById('fPat').oninput=render;
+document.getElementById('modalAdd').addEventListener('click',function(e){if(e.target===this)closeAdd();});
+document.getElementById('modalWP').addEventListener('click',function(e){if(e.target===this)closeWP();});
+
+render();
+</script>
 </body>
 </html>
