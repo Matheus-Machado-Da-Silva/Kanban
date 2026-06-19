@@ -7,6 +7,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCsoi-us9x6va-QTygJVWIXi9k_nLta8Ls",
@@ -19,9 +20,10 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
 const vehiclesCol = collection(db, "veiculos");
 
-window.__fb = { db, vehiclesCol, setDoc, doc, deleteDoc, onSnapshot, collection };
+window.__fb = { db, vehiclesCol, setDoc, doc, deleteDoc, onSnapshot, collection, auth, signInWithEmailAndPassword, signOut, onAuthStateChanged };
 window.dispatchEvent(new Event('fb-ready'));
 </script>
 <style>
@@ -117,6 +119,19 @@ tr:hover td{background:#00e5ff08}
 .warn-box{background:#2a1000;border:1px solid #f97316;border-radius:8px;padding:10px 12px;font-size:13px;color:#fb923c;margin-top:10px;display:none}
 
 .section-divider{height:1px;background:linear-gradient(90deg,transparent,#00e5ff55,transparent);margin:1rem 0}
+
+/* LOGIN */
+.login-area{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.btn-login{background:#0d0d0d;color:#00e5ff;border:1.5px solid #00e5ff55;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+.btn-login:active{background:#00343d}
+.user-chip{font-size:11px;color:#39ff6a;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.btn-logout{background:none;border:1px solid #f8717155;color:#f87171;padding:5px 10px;border-radius:8px;font-size:11px;cursor:pointer}
+.btn-logout:active{background:#3d0a0a}
+.view-only-tag{font-size:10px;color:#5fb8c9;background:#001a1f;border:1px solid #00e5ff33;padding:3px 9px;border-radius:20px;white-space:nowrap}
+
+.modal-login{background:#0d0d0d;border:1.5px solid #00e5ff;border-radius:16px;padding:1.5rem 1.2rem;width:100%;max-width:360px;box-shadow:0 0 30px #00e5ff33}
+.modal-login h2{color:#00e5ff;font-size:17px;font-weight:700;margin-bottom:1rem}
+.login-error{background:#2a1000;border:1px solid #f97316;border-radius:8px;padding:10px 12px;font-size:13px;color:#fb923c;margin-top:10px;display:none}
 </style>
 </head>
 <body>
@@ -129,7 +144,10 @@ tr:hover td{background:#00e5ff08}
       <div class="dept-tag">Departamento Técnico</div>
     </div>
   </div>
-  <div class="sync-label"><span class="sync-dot" id="syncDot"></span><span id="syncText">conectando...</span></div>
+  <div class="login-area" id="loginArea">
+    <div class="sync-label"><span class="sync-dot" id="syncDot"></span><span id="syncText">conectando...</span></div>
+    <button class="btn-login" id="btnOpenLogin" onclick="openLogin()">🔒 Entrar</button>
+  </div>
 </div>
 
 <div class="wrap">
@@ -153,18 +171,37 @@ tr:hover td{background:#00e5ff08}
     <select id="fModelo"><option value="">Todos os modelos</option></select>
     <select id="fStatus"><option value="">Todos os status</option></select>
   </div>
-  <div class="controls">
+  <div class="controls" id="editControls" style="display:none">
     <button class="btn-add" onclick="openAdd()">＋ Adicionar Veículo</button>
     <button class="btn-wp" onclick="openWP()">📋 Relatório WhatsApp</button>
+  </div>
+  <div class="controls" id="viewOnlyControls">
+    <button class="btn-wp" onclick="openWP()" style="flex:1">📋 Relatório WhatsApp</button>
+    <span class="view-only-tag" style="align-self:center">👁️ Modo visualização — faça login para editar</span>
   </div>
   <div class="count-info" id="countInfo"></div>
 
   <div class="table-wrap">
     <table>
-      <thead><tr><th>Modelo</th><th>Patrimônio</th><th>Status</th><th style="width:72px">Ações</th></tr></thead>
+      <thead><tr><th>Modelo</th><th>Patrimônio</th><th>Status</th><th style="width:72px" id="thAcoes">Ações</th></tr></thead>
       <tbody id="tbody"></tbody>
     </table>
     <div class="empty" id="empty" style="display:none">Nenhum veículo encontrado.</div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalLogin">
+  <div class="modal-login">
+    <h2>🔒 Login do Departamento Técnico</h2>
+    <label style="font-size:13px;color:#5fb8c9;display:block;margin-bottom:4px;margin-top:8px">E-mail</label>
+    <input id="loginEmail" placeholder="seu.email@exemplo.com" autocomplete="username" style="width:100%;background:#0a0a0a;border:1px solid #00e5ff44;color:#e0fbff;padding:10px 12px;border-radius:8px;font-size:15px;height:44px"/>
+    <label style="font-size:13px;color:#5fb8c9;display:block;margin-bottom:4px;margin-top:12px">Senha</label>
+    <input id="loginPass" type="password" placeholder="••••••••" autocomplete="current-password" style="width:100%;background:#0a0a0a;border:1px solid #00e5ff44;color:#e0fbff;padding:10px 12px;border-radius:8px;font-size:15px;height:44px"/>
+    <div class="login-error" id="loginError">⚠️ E-mail ou senha incorretos.</div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeLogin()">Cancelar</button>
+      <button class="btn-save" id="btnDoLogin" onclick="doLogin()">Entrar</button>
+    </div>
   </div>
 </div>
 
@@ -371,20 +408,45 @@ const INITIAL=[
 let vehicles=[];
 let editIndex=-1;
 let fbReady=false;
-let firstSnapshotReceived=false;
 let docIds={}; // map "MODELO|PATRIMONIO" -> firestore doc id
+let isLoggedIn=false;
+let currentUserEmail=null;
 
 function loadCache(){try{const d=localStorage.getItem(STORAGE_KEY);if(d)return JSON.parse(d);}catch(e){}return [];}
 function saveCache(data){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(data));}catch(e){}}
 
 function setSyncStatus(online){
   document.getElementById('syncDot').classList.toggle('online',online);
-  document.getElementById('syncText').textContent=online?'sincronizado':'offline (local)';
+  document.getElementById('syncText').textContent=online?'sincronizado':'conectando...';
+}
+
+function setPermissionUI(){
+  document.getElementById('editControls').style.display=isLoggedIn?'flex':'none';
+  document.getElementById('viewOnlyControls').style.display=isLoggedIn?'none':'flex';
+  document.getElementById('thAcoes').style.display=isLoggedIn?'':'none';
+  const loginArea=document.getElementById('loginArea');
+  const btnOpenLogin=document.getElementById('btnOpenLogin');
+  let userChip=document.getElementById('userChip');
+  if(isLoggedIn){
+    btnOpenLogin.style.display='none';
+    if(!userChip){
+      userChip=document.createElement('div');
+      userChip.id='userChip';
+      userChip.className='user-chip';
+      userChip.innerHTML='● editando<button class="btn-logout" onclick="doLogout()">Sair</button>';
+      loginArea.appendChild(userChip);
+    }
+  } else {
+    btnOpenLogin.style.display='inline-block';
+    if(userChip) userChip.remove();
+  }
+  render();
 }
 
 // Renomeia, dentro do próprio Firestore, qualquer veículo com status antigo (ex: "Em Manutenção" -> "Em Produção").
-// Não apaga nem recria nada: só corrige o campo status de documentos já existentes.
+// Não apaga nem recria nada: só corrige o campo status de documentos já existentes. Só roda se estiver logado.
 async function migrateOldStatuses(){
+  if(!isLoggedIn)return;
   const {db,setDoc,doc}=window.__fb;
   for(const v of vehicles){
     const novoStatus=STATUS_MIGRATION[v.status];
@@ -397,24 +459,28 @@ async function migrateOldStatuses(){
   }
 }
 
-// Mostra algo na tela imediatamente usando o cache local, enquanto espera o Firestore responder.
-// Isso evita a tela "vazia" e evita decisões precipitadas de cair em modo offline.
-(function initialPaint(){
-  const cached=loadCache();
-  vehicles = cached.length ? cached : JSON.parse(JSON.stringify(INITIAL));
-  setSyncStatus(false);
-  render();
-})();
+// IMPORTANTE: a tela NUNCA mostra o cache local como dado "real" sem deixar claro que está carregando,
+// e NUNCA grava o cache de volta no Firestore. O cache serve só para não mostrar a tela vazia em caso
+// de falha de rede, mas é sempre substituído assim que o Firestore responder.
+function showLoadingState(){
+  document.getElementById('tbody').innerHTML='<tr><td colspan="4" style="text-align:center;padding:2rem;color:#3a6b73">Carregando dados do servidor...</td></tr>';
+}
+showLoadingState();
 
 window.addEventListener('fb-ready', ()=>{
-  const {vehiclesCol,setDoc,doc,onSnapshot}=window.__fb;
+  const {vehiclesCol,setDoc,doc,onSnapshot,auth,onAuthStateChanged}=window.__fb;
   fbReady=true;
 
-  onSnapshot(vehiclesCol, async (snap)=>{
-    firstSnapshotReceived=true;
+  onAuthStateChanged(auth,(user)=>{
+    isLoggedIn=!!user;
+    currentUserEmail=user?user.email:null;
+    setPermissionUI();
+  });
 
+  onSnapshot(vehiclesCol, async (snap)=>{
     if(snap.empty){
       // Banco realmente vazio (primeiro uso): popular com os dados iniciais.
+      // Isso só roda uma vez na vida do banco — depois disso, snap.empty nunca mais será true.
       for(const v of INITIAL){
         const id=(v.modelo+'_'+v.patrimonio).replace(/[^a-zA-Z0-9_]/g,'');
         await setDoc(doc(window.__fb.db,'veiculos',id), v);
@@ -437,11 +503,47 @@ window.addEventListener('fb-ready', ()=>{
     await migrateOldStatuses();
   }, (err)=>{
     console.error('Firestore error', err);
-    setSyncStatus(false);
+    document.getElementById('syncText').textContent='erro de conexão';
+    document.getElementById('syncDot').classList.remove('online');
+    if(vehicles.length===0){
+      document.getElementById('tbody').innerHTML='<tr><td colspan="4" style="text-align:center;padding:2rem;color:#f87171">Não foi possível conectar ao servidor. Verifique sua internet e recarregue a página.</td></tr>';
+    }
   });
 });
 
+function openLogin(){
+  document.getElementById('loginEmail').value='';
+  document.getElementById('loginPass').value='';
+  document.getElementById('loginError').style.display='none';
+  document.getElementById('modalLogin').classList.add('open');
+}
+function closeLogin(){document.getElementById('modalLogin').classList.remove('open');}
+
+async function doLogin(){
+  const email=document.getElementById('loginEmail').value.trim();
+  const pass=document.getElementById('loginPass').value;
+  const errBox=document.getElementById('loginError');
+  errBox.style.display='none';
+  if(!email||!pass){ errBox.textContent='⚠️ Preencha e-mail e senha.'; errBox.style.display='block'; return; }
+  const {auth,signInWithEmailAndPassword}=window.__fb;
+  try{
+    await signInWithEmailAndPassword(auth,email,pass);
+    closeLogin();
+  }catch(e){
+    errBox.textContent='⚠️ E-mail ou senha incorretos.';
+    errBox.style.display='block';
+  }
+}
+
+async function doLogout(){
+  const {auth,signOut}=window.__fb;
+  try{ await signOut(auth); }catch(e){console.error(e);}
+}
+
+document.getElementById('modalLogin').addEventListener('click',function(e){if(e.target===this)closeLogin();});
+
 async function persistUpsert(v, oldKey){
+  if(!isLoggedIn){console.warn('Bloqueado: usuário não autenticado.');return;}
   saveCache(vehicles);
   if(!fbReady){return;}
   const {db,setDoc,doc,deleteDoc}=window.__fb;
@@ -451,16 +553,17 @@ async function persistUpsert(v, oldKey){
       await deleteDoc(doc(db,'veiculos',docIds[oldKey]));
     }
     await setDoc(doc(db,'veiculos',newId), v);
-  }catch(e){console.error('Erro ao salvar no Firestore',e);}
+  }catch(e){console.error('Erro ao salvar no Firestore',e);alert('Não foi possível salvar. Verifique se você está logado e conectado à internet.');}
 }
 
 async function persistDelete(v){
+  if(!isLoggedIn){console.warn('Bloqueado: usuário não autenticado.');return;}
   const key=v.modelo+'|'+v.patrimonio;
   saveCache(vehicles);
   if(!fbReady){return;}
   const {db,deleteDoc,doc}=window.__fb;
   const id=docIds[key] || (v.modelo+'_'+v.patrimonio).replace(/[^a-zA-Z0-9_]/g,'');
-  try{ await deleteDoc(doc(db,'veiculos',id)); }catch(e){console.error('Erro ao deletar',e);}
+  try{ await deleteDoc(doc(db,'veiculos',id)); }catch(e){console.error('Erro ao deletar',e);alert('Não foi possível remover. Verifique se você está logado e conectado à internet.');}
 }
 
 function badgeClass(s){
@@ -525,15 +628,16 @@ function render(){
   tbody.innerHTML=filtered.map(v=>`<tr${sp&&v.patrimonio.toLowerCase()===sp?' style="background:#00e5ff14"':''}>
     <td style="font-weight:700">${v.modelo}</td>
     <td style="font-family:monospace;font-size:13px">${v.patrimonio}</td>
-    <td>${statusSelectHTML(v.status,v._i)}</td>
-    <td><div class="action-btns">
+    <td>${isLoggedIn?statusSelectHTML(v.status,v._i):`<span class="badge ${badgeClass(v.status)}">${v.status}</span>`}</td>
+    ${isLoggedIn?`<td><div class="action-btns">
       <button class="btn-edit" onclick="openEdit(${v._i})" title="Editar">✏️</button>
       <button class="btn-del" onclick="del(${v._i})" title="Remover">✕</button>
-    </div></td>
+    </div></td>`:''}
   </tr>`).join('');
 }
 
 function changeStatus(i,val){
+  if(!isLoggedIn)return;
   const oldKey=vehicles[i].modelo+'|'+vehicles[i].patrimonio;
   vehicles[i].status=val;
   persistUpsert(vehicles[i], oldKey);
@@ -541,6 +645,7 @@ function changeStatus(i,val){
 }
 
 function del(i){
+  if(!isLoggedIn)return;
   const v=vehicles[i];
   if(!confirm('Remover '+v.modelo+' - '+v.patrimonio+'?'))return;
   vehicles.splice(i,1);
@@ -549,6 +654,7 @@ function del(i){
 }
 
 function openAdd(){
+  if(!isLoggedIn){openLogin();return;}
   editIndex=-1;
   document.getElementById('modalTitle').textContent='＋ Adicionar Veículo';
   document.getElementById('btnSave').textContent='Salvar';
@@ -561,6 +667,7 @@ function openAdd(){
 }
 
 function openEdit(i){
+  if(!isLoggedIn){openLogin();return;}
   editIndex=i;
   const v=vehicles[i];
   document.getElementById('modalTitle').textContent='✏️ Editar Veículo';
@@ -577,6 +684,7 @@ function closeAdd(){document.getElementById('modalAdd').classList.remove('open')
 function checkDup(m,p,skipIdx){return vehicles.some((v,i)=>i!==skipIdx&&v.modelo===m&&v.patrimonio===p);}
 
 function saveVehicle(){
+  if(!isLoggedIn){openLogin();return;}
   const m=document.getElementById('inModelo').value.trim().toUpperCase();
   const p=document.getElementById('inPat').value.trim();
   const s=document.getElementById('inStatus').value;
@@ -655,7 +763,6 @@ document.getElementById('inPat').addEventListener('input',function(){
   document.getElementById('warnDup').style.display=(m&&p&&checkDup(m,p,editIndex))?'block':'none';
 });
 
-render();
 </script>
 </body>
 </html>
