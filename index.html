@@ -186,7 +186,6 @@ tr:hover td{background:#00e5ff08}
       <option value="Aguardando Insumos">Aguardando Insumos</option>
       <option value="Disponível">Disponível</option>
       <option value="Emergencial">Emergencial</option>
-      <option value="Em Manutenção">Em Manutenção</option>
       <option value="Em Vistoria">Em Vistoria</option>
       <option value="Inativo">Inativo</option>
       <option value="Previsto">Previsto</option>
@@ -212,10 +211,13 @@ tr:hover td{background:#00e5ff08}
 
 <script>
 const STORAGE_KEY='brmobility_v5_cache';
-const STATUS_LIST=['Em Produção','Em Teste','Stand By','Implementado','Aguardando Manutenção','Aguardando Insumos','Disponível','Emergencial','Em Manutenção','Em Vistoria','Inativo','Previsto'];
+const STATUS_LIST=['Em Produção','Em Teste','Stand By','Implementado','Aguardando Manutenção','Aguardando Insumos','Disponível','Emergencial','Em Vistoria','Inativo','Previsto'];
+
+// Status antigos que devem ser migrados automaticamente para um novo nome (não apaga dados, só renomeia)
+const STATUS_MIGRATION={ 'Em Manutenção':'Em Produção' };
 
 // Ordem de prioridade exigida no relatório
-const REPORT_ORDER=['Stand By','Em Vistoria','Em Teste','Em Manutenção','Aguardando Manutenção','Aguardando Insumos'];
+const REPORT_ORDER=['Stand By','Em Vistoria','Em Teste','Aguardando Manutenção','Aguardando Insumos'];
 
 const INITIAL=[
   {modelo:'BR8',patrimonio:'0143',status:'Aguardando Insumos'},
@@ -369,6 +371,7 @@ const INITIAL=[
 let vehicles=[];
 let editIndex=-1;
 let fbReady=false;
+let firstSnapshotReceived=false;
 let docIds={}; // map "MODELO|PATRIMONIO" -> firestore doc id
 
 function loadCache(){try{const d=localStorage.getItem(STORAGE_KEY);if(d)return JSON.parse(d);}catch(e){}return [];}
@@ -379,19 +382,46 @@ function setSyncStatus(online){
   document.getElementById('syncText').textContent=online?'sincronizado':'offline (local)';
 }
 
-window.addEventListener('fb-ready', async ()=>{
-  const {db,vehiclesCol,setDoc,doc,onSnapshot}=window.__fb;
+// Renomeia, dentro do próprio Firestore, qualquer veículo com status antigo (ex: "Em Manutenção" -> "Em Produção").
+// Não apaga nem recria nada: só corrige o campo status de documentos já existentes.
+async function migrateOldStatuses(){
+  const {db,setDoc,doc}=window.__fb;
+  for(const v of vehicles){
+    const novoStatus=STATUS_MIGRATION[v.status];
+    if(novoStatus){
+      v.status=novoStatus;
+      const key=v.modelo+'|'+v.patrimonio;
+      const id=docIds[key] || (v.modelo+'_'+v.patrimonio).replace(/[^a-zA-Z0-9_]/g,'');
+      try{ await setDoc(doc(db,'veiculos',id), v); }catch(e){console.error('Erro ao migrar status',e);}
+    }
+  }
+}
+
+// Mostra algo na tela imediatamente usando o cache local, enquanto espera o Firestore responder.
+// Isso evita a tela "vazia" e evita decisões precipitadas de cair em modo offline.
+(function initialPaint(){
+  const cached=loadCache();
+  vehicles = cached.length ? cached : JSON.parse(JSON.stringify(INITIAL));
+  setSyncStatus(false);
+  render();
+})();
+
+window.addEventListener('fb-ready', ()=>{
+  const {vehiclesCol,setDoc,doc,onSnapshot}=window.__fb;
   fbReady=true;
 
   onSnapshot(vehiclesCol, async (snap)=>{
-    if(snap.empty && vehicles.length===0){
-      // primeira vez: popular o Firestore com os dados iniciais
+    firstSnapshotReceived=true;
+
+    if(snap.empty){
+      // Banco realmente vazio (primeiro uso): popular com os dados iniciais.
       for(const v of INITIAL){
         const id=(v.modelo+'_'+v.patrimonio).replace(/[^a-zA-Z0-9_]/g,'');
         await setDoc(doc(window.__fb.db,'veiculos',id), v);
       }
-      return;
+      return; // o próprio onSnapshot vai disparar de novo com os dados recém-criados
     }
+
     const list=[];
     docIds={};
     snap.forEach(d=>{
@@ -403,22 +433,13 @@ window.addEventListener('fb-ready', async ()=>{
     saveCache(vehicles);
     setSyncStatus(true);
     render();
+
+    await migrateOldStatuses();
   }, (err)=>{
     console.error('Firestore error', err);
     setSyncStatus(false);
   });
 });
-
-// fallback se Firebase não conectar em 3s, usa cache local
-setTimeout(()=>{
-  if(!fbReady || vehicles.length===0){
-    if(vehicles.length===0){
-      const cached=loadCache();
-      vehicles = cached.length ? cached : JSON.parse(JSON.stringify(INITIAL));
-      render();
-    }
-  }
-},3000);
 
 async function persistUpsert(v, oldKey){
   saveCache(vehicles);
