@@ -176,8 +176,7 @@ tr:hover td{background:#00e5ff08}
     <button class="btn-wp" onclick="openWP()">📋 Relatório WhatsApp</button>
   </div>
   <div class="controls" id="viewOnlyControls">
-    <button class="btn-wp" onclick="openWP()" style="flex:1">📋 Relatório WhatsApp</button>
-    <span class="view-only-tag" style="align-self:center">👁️ Modo visualização — faça login para editar</span>
+    <span class="view-only-tag" style="align-self:center">👁️ Modo visualização — faça login para editar e gerar relatório</span>
   </div>
   <div class="count-info" id="countInfo"></div>
 
@@ -724,6 +723,7 @@ function buildReportText(){
 }
 
 function openWP(){
+  if(!isLoggedIn){openLogin();return;}
   const msg=buildReportText();
   document.getElementById('wpMsg').textContent=msg;
   document.getElementById('modalWP').classList.add('open');
