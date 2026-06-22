@@ -165,7 +165,7 @@ tr:hover td{background:#00e5ff08}
 
   <div class="search-bar">
     <span class="search-icon">🔍</span>
-    <input id="searchPat" placeholder="Buscar patrimônio..." inputmode="text" autocomplete="off"/>
+    <input id="searchPat" placeholder="Buscar por patrimônio ou modelo (ex: S9, BR8)..." inputmode="text" autocomplete="off"/>
     <span class="search-result-tag" id="searchTag"></span>
   </div>
 
@@ -637,7 +637,7 @@ function render(){
   if(!activeStatusFilter && fs){ /* usuário usou o select manualmente, sem problema */ }
 
   const filtered=vehicles.map((v,i)=>({...v,_i:i})).filter(v=>{
-    if(sp && !v.patrimonio.toLowerCase().includes(sp))return false;
+    if(sp && !v.patrimonio.toLowerCase().includes(sp) && !v.modelo.toLowerCase().includes(sp))return false;
     if(fm && v.modelo!==fm)return false;
     if(fs && v.status!==fs)return false;
     return true;
