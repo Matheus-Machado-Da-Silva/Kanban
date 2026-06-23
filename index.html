@@ -4,9 +4,10 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
 <title>Kanban BRMobility</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, addDoc, query, where, getDocs, serverTimestamp, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
@@ -22,8 +23,9 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 const vehiclesCol = collection(db, "veiculos");
+const historyCol = collection(db, "historico_status");
 
-window.__fb = { db, vehiclesCol, setDoc, doc, deleteDoc, onSnapshot, collection, auth, signInWithEmailAndPassword, signOut, onAuthStateChanged };
+window.__fb = { db, vehiclesCol, historyCol, setDoc, doc, deleteDoc, onSnapshot, collection, auth, signInWithEmailAndPassword, signOut, onAuthStateChanged, addDoc, query, where, getDocs, serverTimestamp, Timestamp };
 window.dispatchEvent(new Event('fb-ready'));
 </script>
 <style>
@@ -67,6 +69,8 @@ body{background:#050505;font-family:'Segoe UI',Arial,sans-serif;color:#e0fbff;mi
 .btn-add:active{background:#00b8cc}
 .btn-wp{background:#0d0d0d;color:#25d366;border:1.5px solid #25d366;padding:0 16px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;height:42px;width:100%;box-shadow:0 0 8px #25d36633}
 .btn-wp:active{background:#0d1f12}
+.btn-chart{background:#0d0d0d;color:#c084fc;border:1.5px solid #c084fc;padding:0 16px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;height:42px;width:100%;box-shadow:0 0 8px #c084fc33}
+.btn-chart:active{background:#1a0a2a}
 .count-info{font-size:12px;color:#3a6b73;margin-bottom:8px}
 
 .table-wrap{background:#0d0d0d;border:1.5px solid #00e5ff33;border-radius:12px;overflow:hidden;overflow-x:auto;-webkit-overflow-scrolling:touch}
@@ -127,6 +131,14 @@ tr:hover td{background:#00e5ff08}
 
 .section-divider{height:1px;background:linear-gradient(90deg,transparent,#00e5ff55,transparent);margin:1rem 0}
 
+/* GRÁFICOS */
+.modal-charts{background:#0d0d0d;border:1.5px solid #c084fc;border-radius:16px 16px 0 0;padding:1.5rem 1.2rem;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;box-shadow:0 0 30px #c084fc33}
+@media(min-width:500px){.modal-charts{border-radius:16px}}
+.modal-charts h2{color:#c084fc;font-size:17px;font-weight:700;margin-bottom:1rem}
+.chart-block{background:#0a0a0a;border:1px solid #c084fc33;border-radius:10px;padding:1rem;margin-bottom:1rem}
+.chart-title{font-size:13px;color:#e0fbff;font-weight:700;margin-bottom:10px;text-align:center}
+.chart-empty-notice{background:#1a1500;border:1px solid #facc1544;border-radius:8px;padding:12px;font-size:13px;color:#facc15;margin-bottom:1rem;line-height:1.6}
+
 /* LOGIN */
 .login-area{display:flex;align-items:center;gap:8px;flex-shrink:0;justify-self:end}
 .btn-login{background:#0d0d0d;color:#00e5ff;border:1.5px solid #00e5ff55;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
@@ -178,8 +190,10 @@ tr:hover td{background:#00e5ff08}
   <div class="controls" id="editControls" style="display:none">
     <button class="btn-add" onclick="openAdd()">＋ Adicionar Veículo</button>
     <button class="btn-wp" onclick="openWP()">📋 Relatório WhatsApp</button>
+    <button class="btn-chart" onclick="openCharts()">📊 Gráficos (15 dias)</button>
   </div>
   <div class="controls" id="viewOnlyControls">
+    <button class="btn-chart" onclick="openCharts()" style="flex:1">📊 Gráficos (15 dias)</button>
     <span class="view-only-tag" style="align-self:center">👁️ Modo visualização — faça login para editar e gerar relatório</span>
   </div>
   <div class="count-info" id="countInfo"></div>
@@ -251,6 +265,29 @@ tr:hover td{background:#00e5ff08}
   </div>
 </div>
 
+<div class="modal-bg" id="modalCharts">
+  <div class="modal-charts">
+    <h2>📊 Comparativo dos últimos 15 dias</h2>
+    <div id="chartsEmptyNotice" class="chart-empty-notice" style="display:none">
+      Ainda não há histórico suficiente. O registro de mudanças de status começou a partir de agora —
+      volte aqui em alguns dias para ver a comparação completa.
+    </div>
+    <div id="chartsContent">
+      <div class="chart-block">
+        <div class="chart-title">Veículos prontos (Stand By)</div>
+        <canvas id="chartStandBy" height="180"></canvas>
+      </div>
+      <div class="chart-block">
+        <div class="chart-title">Entradas no Kanban (Aguardando Manutenção)</div>
+        <canvas id="chartAguardando" height="180"></canvas>
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeCharts()">Fechar</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const STORAGE_KEY='brmobility_v5_cache';
 const STATUS_LIST=['Em Produção','Em Teste','Stand By','Implementado','Aguardando Manutenção','Aguardando Insumos','Disponível','Emergencial','Em Vistoria','Inativo','Previsto'];
@@ -259,7 +296,8 @@ const STATUS_LIST=['Em Produção','Em Teste','Stand By','Implementado','Aguarda
 const STATUS_MIGRATION={ 'Em Manutenção':'Em Produção' };
 
 // Ordem de prioridade exigida no relatório
-const REPORT_ORDER=['Stand By','Em Vistoria','Em Teste','Aguardando Manutenção','Aguardando Insumos'];
+const REPORT_ORDER=['Stand By','Em Vistoria','Em Teste','Em Produção','Aguardando Insumos'];
+const REPORT_LAST=['Pátio']; // status que sempre devem ficar no final do relatório, depois de todos os outros
 
 const INITIAL=[
   {modelo:'BR8',patrimonio:'0143',status:'Aguardando Insumos'},
@@ -547,7 +585,23 @@ async function doLogout(){
 
 document.getElementById('modalLogin').addEventListener('click',function(e){if(e.target===this)closeLogin();});
 
-async function persistUpsert(v, oldKey){
+async function logStatusHistory(v, statusAnterior){
+  // Registra a mudança de status com data/hora real do servidor. Nunca apaga registros antigos,
+  // só adiciona um novo evento — é assim que os gráficos de "últimos 15 dias" vão funcionar no futuro.
+  if(!isLoggedIn || !fbReady)return;
+  const {historyCol,addDoc,serverTimestamp}=window.__fb;
+  try{
+    await addDoc(historyCol, {
+      modelo: v.modelo,
+      patrimonio: v.patrimonio,
+      statusAnterior: statusAnterior || null,
+      statusNovo: v.status,
+      timestamp: serverTimestamp()
+    });
+  }catch(e){ console.error('Erro ao registrar histórico (não bloqueia o salvamento principal)', e); }
+}
+
+async function persistUpsert(v, oldKey, statusAnterior){
   if(!isLoggedIn){console.warn('Bloqueado: usuário não autenticado.');return;}
   saveCache(vehicles);
   if(!fbReady){return;}
@@ -558,6 +612,9 @@ async function persistUpsert(v, oldKey){
       await deleteDoc(doc(db,'veiculos',docIds[oldKey]));
     }
     await setDoc(doc(db,'veiculos',newId), v);
+    if(statusAnterior!==undefined && statusAnterior!==v.status){
+      logStatusHistory(v, statusAnterior); // não bloqueia a UI, roda em paralelo
+    }
   }catch(e){console.error('Erro ao salvar no Firestore',e);alert('Não foi possível salvar. Verifique se você está logado e conectado à internet.');}
 }
 
@@ -683,8 +740,9 @@ function render(){
 function changeStatus(i,val){
   if(!isLoggedIn)return;
   const oldKey=vehicles[i].modelo+'|'+vehicles[i].patrimonio;
+  const statusAnterior=vehicles[i].status;
   vehicles[i].status=val;
-  persistUpsert(vehicles[i], oldKey);
+  persistUpsert(vehicles[i], oldKey, statusAnterior);
   render();
 }
 
@@ -766,13 +824,14 @@ function saveVehicle(){
   if(dup)return;
 
   if(editIndex>=0){
+    const statusAnterior=vehicles[editIndex].status;
     const oldKey=vehicles[editIndex].modelo+'|'+vehicles[editIndex].patrimonio;
     vehicles[editIndex]={modelo:m,patrimonio:p,status:s};
-    persistUpsert(vehicles[editIndex], oldKey);
+    persistUpsert(vehicles[editIndex], oldKey, statusAnterior);
   } else {
     const newV={modelo:m,patrimonio:p,status:s};
     vehicles.push(newV);
-    persistUpsert(newV, null);
+    persistUpsert(newV, null, null); // null = entrada nova no Kanban, sem status anterior
   }
   closeAdd();render();
 }
@@ -785,14 +844,21 @@ function buildReportText(){
   const ano=now.getFullYear();
   const data=`${dia}/${mes}/${ano}`;
 
-  // ordena conforme REPORT_ORDER; status fora da lista vão ao final, na ordem em que aparecem
-  const grouped=[];
-  REPORT_ORDER.forEach(st=>{
-    vehicles.filter(v=>v.status===st).forEach(v=>grouped.push(v));
-  });
-  vehicles.filter(v=>!REPORT_ORDER.includes(v.status)).forEach(v=>grouped.push(v));
+  // 1) status prioritários, na ordem definida em REPORT_ORDER
+  // 2) demais status (que não estão em REPORT_ORDER nem em REPORT_LAST), agrupados por status, na ordem em que aparecem
+  // 3) status de REPORT_LAST (ex: "Pátio") sempre por último
+  const allStatusesPresent=[...new Set(vehicles.map(v=>v.status))];
+  const middleStatuses=allStatusesPresent.filter(s=>!REPORT_ORDER.includes(s) && !REPORT_LAST.includes(s));
+  const finalStatusOrder=[...REPORT_ORDER, ...middleStatuses, ...REPORT_LAST.filter(s=>allStatusesPresent.includes(s))];
 
-  const lista=grouped.map(v=>`*${v.modelo}-${v.patrimonio}*; ${v.status}`).join('\n');
+  const blocks=[];
+  finalStatusOrder.forEach(st=>{
+    const group=vehicles.filter(v=>v.status===st);
+    if(group.length>0){
+      blocks.push(group.map(v=>`*${v.modelo}-${v.patrimonio}*; ${v.status}`).join('\n'));
+    }
+  });
+  const lista=blocks.join('\n\n'); // linha em branco entre cada grupo de status
   const kanbanLink=window.location.href;
   return `Olá, senhores (as).\nSegue relatório atualizado em ${data} da produção de veículos realizado pelo departamento técnico.\n\n${lista}\n\nOs veículos em *Stand by* seguem sem carregadores e com OS Disponível no Eloca.\n\nPara acompanhamento em tempo real de produção segue link do Kanban Virtual do Depto. Técnico: ${kanbanLink}\nObrigado.`;
 }
@@ -805,6 +871,120 @@ function openWP(){
 }
 
 function closeWP(){document.getElementById('modalWP').classList.remove('open');}
+
+let chartInstanceStandBy=null;
+let chartInstanceAguardando=null;
+
+function dayKey(date){
+  return date.toISOString().slice(0,10); // YYYY-MM-DD
+}
+
+function buildDayLabels(daysCount, endDate){
+  const labels=[];
+  for(let i=daysCount-1;i>=0;i--){
+    const d=new Date(endDate);
+    d.setDate(d.getDate()-i);
+    labels.push(dayKey(d));
+  }
+  return labels;
+}
+
+async function fetchHistoryEvents(statusNovoFiltro){
+  const {historyCol,query,where,getDocs,Timestamp}=window.__fb;
+  const now=new Date();
+  const start30=new Date(now); start30.setDate(start30.getDate()-30); start30.setHours(0,0,0,0);
+  const q=query(historyCol, where('statusNovo','==',statusNovoFiltro));
+  const snap=await getDocs(q);
+  const events=[];
+  snap.forEach(d=>{
+    const data=d.data();
+    if(data.timestamp){
+      const ts=data.timestamp.toDate ? data.timestamp.toDate() : new Date(data.timestamp);
+      if(ts>=start30) events.push(ts);
+    }
+  });
+  return events;
+}
+
+function countByDay(events, labels){
+  const counts=labels.reduce((acc,l)=>{acc[l]=0;return acc;},{});
+  events.forEach(ts=>{
+    const k=dayKey(ts);
+    if(k in counts) counts[k]++;
+  });
+  return labels.map(l=>counts[l]);
+}
+
+function renderComparisonChart(canvasId, existingInstance, eventsLast15, eventsPrev15, labelsLast15, lineColor){
+  const ctx=document.getElementById(canvasId).getContext('2d');
+  if(existingInstance) existingInstance.destroy();
+
+  const dataLast=countByDay(eventsLast15, labelsLast15);
+  // para comparar "dia a dia" com o período anterior, usamos posições relativas (Dia 1..Dia 15), não datas absolutas
+  const now=new Date();
+  const startPrev=new Date(now); startPrev.setDate(startPrev.getDate()-30);
+  const labelsPrev15=buildDayLabels(15, new Date(now.getTime()-15*24*60*60*1000));
+  const dataPrev=countByDay(eventsPrev15, labelsPrev15);
+
+  const posLabels=Array.from({length:15},(_,i)=>'Dia '+(i+1));
+
+  return new Chart(ctx,{
+    type:'line',
+    data:{
+      labels:posLabels,
+      datasets:[
+        { label:'Últimos 15 dias', data:dataLast, borderColor:lineColor, backgroundColor:lineColor+'33', tension:0.3, fill:true },
+        { label:'15 dias anteriores', data:dataPrev, borderColor:'#5fb8c9', backgroundColor:'#5fb8c933', tension:0.3, fill:true, borderDash:[5,4] }
+      ]
+    },
+    options:{
+      responsive:true,
+      plugins:{ legend:{ labels:{ color:'#e0fbff', font:{size:11} } } },
+      scales:{
+        x:{ ticks:{ color:'#5fb8c9', font:{size:10} }, grid:{ color:'#ffffff10' } },
+        y:{ ticks:{ color:'#5fb8c9', font:{size:10}, stepSize:1 }, grid:{ color:'#ffffff10' }, beginAtZero:true }
+      }
+    }
+  });
+}
+
+async function openCharts(){
+  document.getElementById('modalCharts').classList.add('open');
+  document.getElementById('chartsEmptyNotice').style.display='none';
+  document.getElementById('chartsContent').style.display='block';
+
+  const now=new Date();
+  const startLast15=new Date(now.getTime()-15*24*60*60*1000);
+  const labelsLast15=buildDayLabels(15, now);
+
+  try{
+    const standByEvents=await fetchHistoryEvents('Stand By');
+    const aguardandoEvents=await fetchHistoryEvents('Aguardando Manutenção');
+
+    const totalEvents=standByEvents.length+aguardandoEvents.length;
+    if(totalEvents===0){
+      document.getElementById('chartsEmptyNotice').style.display='block';
+      document.getElementById('chartsContent').style.display='none';
+      return;
+    }
+
+    const eventsLast15SB=standByEvents.filter(ts=>ts>=startLast15);
+    const eventsPrev15SB=standByEvents.filter(ts=>ts<startLast15);
+    const eventsLast15AG=aguardandoEvents.filter(ts=>ts>=startLast15);
+    const eventsPrev15AG=aguardandoEvents.filter(ts=>ts<startLast15);
+
+    chartInstanceStandBy=renderComparisonChart('chartStandBy', chartInstanceStandBy, eventsLast15SB, eventsPrev15SB, labelsLast15, '#39ff6a');
+    chartInstanceAguardando=renderComparisonChart('chartAguardando', chartInstanceAguardando, eventsLast15AG, eventsPrev15AG, labelsLast15, '#c084fc');
+  }catch(e){
+    console.error('Erro ao carregar histórico para gráficos', e);
+    document.getElementById('chartsEmptyNotice').style.display='block';
+    document.getElementById('chartsEmptyNotice').textContent='⚠️ Não foi possível carregar o histórico agora. Verifique sua conexão e tente novamente.';
+    document.getElementById('chartsContent').style.display='none';
+  }
+}
+
+function closeCharts(){ document.getElementById('modalCharts').classList.remove('open'); }
+document.getElementById('modalCharts').addEventListener('click',function(e){if(e.target===this)closeCharts();});
 
 function copyMsg(){
   const txt=document.getElementById('wpMsg').textContent;
