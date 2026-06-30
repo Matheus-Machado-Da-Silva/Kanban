@@ -132,6 +132,19 @@ tr:hover td{background:#0e6e7a08}
 .section-divider{height:1px;background:linear-gradient(90deg,transparent,#1a9aa855,transparent);margin:1rem 0}
 .page-footer{text-align:center;font-size:12px;color:#7fa8af;margin-top:1.5rem;padding-top:1rem;border-top:1px solid #0e6e7a22}
 .page-footer strong{color:#16424a}
+.tech-options{display:flex;flex-direction:column;gap:10px}
+.tech-btn{background:#ffffff;border:1.5px solid #0e6e7a55;color:#16424a;padding:12px 16px;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;text-align:left;transition:background .15s,border-color .15s}
+.tech-btn:hover,.tech-btn:active{background:#e6f2f3;border-color:#0e6e7a}
+.checklist-group{margin-bottom:1rem}
+.checklist-group-title{font-size:11px;font-weight:700;color:#7fa8af;text-transform:uppercase;letter-spacing:.5px;padding:6px 0;border-bottom:1px solid #0e6e7a22;margin-bottom:6px}
+.checklist-item{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f0f0f0;gap:8px}
+.checklist-item-name{font-size:13px;color:#16424a;flex:1}
+.checklist-btns{display:flex;gap:4px;flex-shrink:0}
+.chk-btn{border:1px solid #ddd;background:#fff;border-radius:6px;padding:4px 8px;font-size:11px;font-weight:700;cursor:pointer;transition:all .12s}
+.chk-btn.ok.active{background:#d1fae5;border-color:#059669;color:#059669}
+.chk-btn.nok.active{background:#fee2e2;border-color:#dc2626;color:#dc2626}
+.chk-btn.np.active{background:#f3f4f6;border-color:#6b7280;color:#6b7280}
+.chk-btn:not(.active){color:#9ca3af}
 .blocked-screen{display:flex;align-items:center;justify-content:center;min-height:60vh;padding:2rem 1rem}
 .blocked-card{background:#ffffff;border:1.5px solid #0e6e7a33;border-radius:16px;padding:2.5rem 2rem;text-align:center;max-width:380px;box-shadow:0 4px 24px #0e6e7a22}
 .blocked-icon{font-size:42px;margin-bottom:1rem}
@@ -326,9 +339,70 @@ tr:hover td{background:#0e6e7a08}
   </div>
 </div>
 
+<!-- Modal: Técnico (aparece ao mudar para Em Vistoria) -->
+<div class="modal-bg" id="modalTechnician">
+  <div class="modal">
+    <h2>🔧 Técnico Responsável</h2>
+    <p style="font-size:13px;color:#3f8c97;margin-bottom:1rem">Selecione o técnico responsável pela vistoria deste veículo:</p>
+    <div id="techVehicleInfo" style="font-size:13px;font-weight:700;color:#16424a;margin-bottom:1rem;background:#e6f2f3;padding:8px 12px;border-radius:8px"></div>
+    <div class="tech-options">
+      <button class="tech-btn" onclick="selectTechnician('Aran Monteiro')">Aran Monteiro</button>
+      <button class="tech-btn" onclick="selectTechnician('Brandon David')">Brandon David</button>
+      <button class="tech-btn" onclick="selectTechnician('Maxwel Gatti')">Maxwel Gatti</button>
+    </div>
+    <div class="modal-btns" style="margin-top:1rem">
+      <button class="btn-cancel" onclick="closeTechnicianPopup()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Enviado (aparece ao mudar para Enviado) -->
+<div class="modal-bg" id="modalEnviado">
+  <div class="modal">
+    <h2>📦 Confirmar Envio</h2>
+    <div id="enviadoVehicleInfo" style="font-size:13px;font-weight:700;color:#16424a;margin-bottom:1rem;background:#e6f2f3;padding:8px 12px;border-radius:8px"></div>
+    <label style="font-size:13px;color:#3f8c97;display:block;margin-bottom:4px">Destino <span style="color:#7fa8af;font-weight:400">(opcional)</span></label>
+    <input id="enviadoDestino" placeholder="Ex: Cliente XYZ, São Paulo..." autocomplete="off" style="width:100%;background:#ffffff;border:1px solid #0e6e7a55;color:#16424a;padding:10px 12px;border-radius:8px;font-size:15px;height:44px"/>
+    <p style="font-size:12px;color:#7fa8af;margin-top:8px">📅 Data de saída será registrada automaticamente como hoje.</p>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeEnviadoPopup()">Cancelar</button>
+      <button class="btn-save" onclick="confirmEnviado()">Confirmar Envio</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Checklist de Vistoria -->
+<div class="modal-bg" id="modalChecklist">
+  <div class="modal" style="max-width:560px">
+    <h2>📋 Checklist de Vistoria</h2>
+    <div id="checklistVehicleInfo" style="font-size:13px;font-weight:700;color:#16424a;margin-bottom:1rem;background:#e6f2f3;padding:8px 12px;border-radius:8px"></div>
+    <div id="checklistItems" style="max-height:55vh;overflow-y:auto"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeChecklist()">Fechar</button>
+      <button class="btn-save" onclick="saveChecklist()">Salvar Checklist</button>
+    </div>
+  </div>
+</div>
+
+<!-- Painel Enviados (exclusivo admin) -->
+<div class="wrap" id="enviadosPanel" style="display:none;margin-top:1.5rem">
+  <div class="section-divider"></div>
+  <h2 style="font-size:15px;font-weight:700;color:#16424a;margin-bottom:1rem">📦 Veículos Enviados</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>Modelo</th><th>Patrimônio</th><th>Técnico</th><th>Destino</th><th>Entrada</th><th>Saída</th>
+      </tr></thead>
+      <tbody id="tbodyEnviados"></tbody>
+    </table>
+    <div class="empty" id="emptyEnviados" style="display:none">Nenhum veículo enviado ainda.</div>
+  </div>
+</div>
+
 <script>
 const STORAGE_KEY='brmobility_v5_cache';
-const STATUS_LIST=['Em Produção','Em Teste','Stand By','Implementado','Aguardando Manutenção','Aguardando Insumos','Disponível','Emergencial','Em Vistoria','Inativo','Previsto'];
+const STATUS_LIST=['Em Produção','Em Teste','Stand By','Implementado','Aguardando Manutenção','Aguardando Insumos','Disponível','Emergencial','Em Vistoria','Inativo','Previsto','Enviado'];
+const STATUS_OCULTOS_KANBAN=['Enviado']; // status que saem do total geral e vão para painéis separados
 
 // Status antigos que devem ser migrados automaticamente para um novo nome (não apaga dados, só renomeia)
 const STATUS_MIGRATION={ 'Em Manutenção':'Em Produção' };
@@ -505,7 +579,6 @@ const AUTHORIZED_VIEWER_EMAILS=[
   'adm@brmobility.com.br',
   'adm2@brmobility.com.br',
   'supervisor@brmobility.com.br',
-  'vanessa@brmobility.com.br',
   'financeiro@brmobility.com.br'
 ];
 
@@ -769,12 +842,12 @@ let activeStatusFilter=null; // status atualmente "clicado" no painel de cards
 
 function renderStatsPanel(){
   const grid=document.getElementById('statsGrid');
-  // conta veículos por status, só inclui status com pelo menos 1
+  const kanbanVehicles=vehicles.filter(v=>!STATUS_OCULTOS_KANBAN.includes(v.status));
   const counts={};
-  vehicles.forEach(v=>{ counts[v.status]=(counts[v.status]||0)+1; });
+  kanbanVehicles.forEach(v=>{ counts[v.status]=(counts[v.status]||0)+1; });
   const statusesWithCount=Object.keys(counts).sort((a,b)=>counts[b]-counts[a]);
 
-  let html=`<div class="stat-card clickable${activeStatusFilter===null?' active':''}" onclick="toggleStatusFilter(null)"><div class="num" id="tot">${vehicles.length}</div><div class="lbl">Total Veículos</div></div>`;
+  let html=`<div class="stat-card clickable${activeStatusFilter===null?' active':''}" onclick="toggleStatusFilter(null)"><div class="num" id="tot">${kanbanVehicles.length}</div><div class="lbl">Total Veículos</div></div>`;
   statusesWithCount.forEach(s=>{
     const isActive=activeStatusFilter===s;
     html+=`<div class="stat-card clickable${isActive?' active':''}" onclick="toggleStatusFilter('${s.replace(/'/g,"\\'")}')"><div class="num">${counts[s]}</div><div class="lbl">${s}</div></div>`;
@@ -800,9 +873,14 @@ function render(){
 
   // mantém o filtro de status sincronizado com o card clicado
   if(activeStatusFilter && fs!==activeStatusFilter){ fs=activeStatusFilter; document.getElementById('fStatus').value=fs; }
-  if(!activeStatusFilter && fs){ /* usuário usou o select manualmente, sem problema */ }
 
-  const filtered=vehicles.map((v,i)=>({...v,_i:i})).filter(v=>{
+  // veículos do kanban principal: exclui status ocultos (ex: Enviado)
+  const kanbanVehicles=vehicles.filter(v=>!STATUS_OCULTOS_KANBAN.includes(v.status));
+
+  const filtered=kanbanVehicles.map((v,i)=>{
+    const realIdx=vehicles.indexOf(v);
+    return {...v,_i:realIdx};
+  }).filter(v=>{
     if(sp && !v.patrimonio.toLowerCase().includes(sp) && !v.modelo.toLowerCase().includes(sp))return false;
     if(fm && v.modelo!==fm)return false;
     if(fs && v.status!==fs)return false;
@@ -828,26 +906,63 @@ function render(){
   selMod.innerHTML='<option value="">Todos os modelos</option>'+modelos.map(m=>`<option value="${m}"${m===curMod?' selected':''}>${m}</option>`).join('');
   selStat.innerHTML='<option value="">Todos os status</option>'+statuses.map(s=>`<option value="${s}"${s===curStat?' selected':''}>${s}</option>`).join('');
 
-  document.getElementById('countInfo').textContent=filtered.length+' veículo(s) exibido(s) de '+vehicles.length+' total';
+  document.getElementById('countInfo').textContent=filtered.length+' veículo(s) exibido(s) de '+kanbanVehicles.length+' total';
 
   const tbody=document.getElementById('tbody');
   const empty=document.getElementById('empty');
-  if(filtered.length===0){tbody.innerHTML='';empty.style.display='block';return;}
-  empty.style.display='none';
+  if(filtered.length===0){tbody.innerHTML='';empty.style.display='block';}
+  else {
+    empty.style.display='none';
+    tbody.innerHTML=filtered.map(v=>`<tr${sp&&v.patrimonio.toLowerCase()===sp?' style="background:#1a9aa814"':''}>
+      <td style="font-weight:700">${v.modelo}</td>
+      <td style="font-family:monospace;font-size:13px">${v.patrimonio}</td>
+      <td>${isAdmin?statusSelectHTML(v.status,v._i):`<span class="badge ${badgeClass(v.status)}">${v.status}</span>`}
+        ${isAdmin&&v.status==='Em Vistoria'?`<button onclick="openChecklist(${v._i})" style="margin-left:6px;background:#0e6e7a;color:#fff;border:none;border-radius:5px;padding:2px 8px;font-size:11px;font-weight:700;cursor:pointer">📋 Vistoria</button>`:''}
+        ${v.tecnico?`<span style="font-size:10px;color:#3f8c97;display:block;margin-top:2px">🔧 ${v.tecnico}</span>`:''}
+      </td>
+      ${isAdmin?`<td><div class="action-btns">
+        <button class="btn-edit" onclick="openEdit(${v._i})" title="Editar">✏️</button>
+        <button class="btn-del" onclick="del(${v._i})" title="Remover">✕</button>
+      </div></td>`:''}
+    </tr>`).join('');
+  }
 
-  tbody.innerHTML=filtered.map(v=>`<tr${sp&&v.patrimonio.toLowerCase()===sp?' style="background:#1a9aa814"':''}>
-    <td style="font-weight:700">${v.modelo}</td>
-    <td style="font-family:monospace;font-size:13px">${v.patrimonio}</td>
-    <td>${isAdmin?statusSelectHTML(v.status,v._i):`<span class="badge ${badgeClass(v.status)}">${v.status}</span>`}</td>
-    ${isAdmin?`<td><div class="action-btns">
-      <button class="btn-edit" onclick="openEdit(${v._i})" title="Editar">✏️</button>
-      <button class="btn-del" onclick="del(${v._i})" title="Remover">✕</button>
-    </div></td>`:''}
-  </tr>`).join('');
+  // Painel de Enviados (só para admin)
+  const enviadosPanel=document.getElementById('enviadosPanel');
+  if(enviadosPanel){
+    if(isAdmin){
+      enviadosPanel.style.display='block';
+      const enviados=vehicles.filter(v=>v.status==='Enviado');
+      const tbodyEnv=document.getElementById('tbodyEnviados');
+      const emptyEnv=document.getElementById('emptyEnviados');
+      if(enviados.length===0){tbodyEnv.innerHTML='';emptyEnv.style.display='block';}
+      else{
+        emptyEnv.style.display='none';
+        tbodyEnv.innerHTML=enviados.map(v=>`<tr>
+          <td style="font-weight:700">${v.modelo}</td>
+          <td style="font-family:monospace;font-size:13px">${v.patrimonio}</td>
+          <td>${v.tecnico||'—'}</td>
+          <td>${v.destino||'—'}</td>
+          <td>${v.dataEntrada?new Date(v.dataEntrada).toLocaleDateString('pt-BR'):'—'}</td>
+          <td>${v.dataSaida?new Date(v.dataSaida).toLocaleDateString('pt-BR'):'—'}</td>
+        </tr>`).join('');
+      }
+    } else {
+      enviadosPanel.style.display='none';
+    }
+  }
 }
 
 function changeStatus(i,val){
   if(!isAdmin)return;
+  if(val==='Em Vistoria'){
+    openTechnicianPopup(i, val);
+    return;
+  }
+  if(val==='Enviado'){
+    openEnviadoPopup(i);
+    return;
+  }
   const oldKey=vehicles[i].modelo+'|'+vehicles[i].patrimonio;
   const statusAnterior=vehicles[i].status;
   vehicles[i].status=val;
@@ -935,18 +1050,171 @@ function saveVehicle(){
   if(editIndex>=0){
     const statusAnterior=vehicles[editIndex].status;
     const oldKey=vehicles[editIndex].modelo+'|'+vehicles[editIndex].patrimonio;
-    vehicles[editIndex]={modelo:m,patrimonio:p,status:s};
+    // preserva dataEntrada, tecnico, destino, dataSaida existentes ao editar
+    vehicles[editIndex]={
+      ...vehicles[editIndex],
+      modelo:m, patrimonio:p, status:s
+    };
     persistUpsert(vehicles[editIndex], oldKey, statusAnterior);
   } else {
-    const newV={modelo:m,patrimonio:p,status:s};
+    const now=new Date();
+    const newV={
+      modelo:m, patrimonio:p, status:s,
+      dataEntrada: now.toISOString(), // data/hora de criação automática
+      tecnico: null,
+      destino: null,
+      dataSaida: null
+    };
     vehicles.push(newV);
-    persistUpsert(newV, null, null); // null = entrada nova no Kanban, sem status anterior
+    persistUpsert(newV, null, null);
   }
   closeAdd();render();
 }
 
 
 function buildReportText(){
+
+// ==================== TÉCNICO ====================
+let technicianTargetIdx=null;
+let technicianTargetStatus=null;
+
+function openTechnicianPopup(i, newStatus){
+  technicianTargetIdx=i;
+  technicianTargetStatus=newStatus;
+  const v=vehicles[i];
+  document.getElementById('techVehicleInfo').textContent=v.modelo+' — Patrimônio '+v.patrimonio;
+  // pré-seleciona técnico já salvo se houver
+  document.querySelectorAll('.tech-btn').forEach(b=>{
+    b.style.background=v.tecnico&&b.textContent===v.tecnico?'#e6f2f3':'#ffffff';
+    b.style.borderColor=v.tecnico&&b.textContent===v.tecnico?'#0e6e7a':'';
+  });
+  document.getElementById('modalTechnician').classList.add('open');
+}
+
+function selectTechnician(nome){
+  if(technicianTargetIdx===null)return;
+  const i=technicianTargetIdx;
+  const oldKey=vehicles[i].modelo+'|'+vehicles[i].patrimonio;
+  const statusAnterior=vehicles[i].status;
+  vehicles[i].status=technicianTargetStatus;
+  vehicles[i].tecnico=nome;
+  persistUpsert(vehicles[i], oldKey, statusAnterior);
+  logStatusHistory(vehicles[i], statusAnterior);
+  document.getElementById('modalTechnician').classList.remove('open');
+  technicianTargetIdx=null;
+  render();
+}
+
+function closeTechnicianPopup(){
+  document.getElementById('modalTechnician').classList.remove('open');
+  technicianTargetIdx=null;
+  // reverte o select para o status atual (pois o usuário cancelou)
+  render();
+}
+document.getElementById('modalTechnician').addEventListener('click',function(e){if(e.target===this)closeTechnicianPopup();});
+
+// ==================== ENVIADO ====================
+let enviadoTargetIdx=null;
+
+function openEnviadoPopup(i){
+  enviadoTargetIdx=i;
+  const v=vehicles[i];
+  document.getElementById('enviadoVehicleInfo').textContent=v.modelo+' — Patrimônio '+v.patrimonio;
+  document.getElementById('enviadoDestino').value=v.destino||'';
+  document.getElementById('modalEnviado').classList.add('open');
+}
+
+function confirmEnviado(){
+  if(enviadoTargetIdx===null)return;
+  const i=enviadoTargetIdx;
+  const oldKey=vehicles[i].modelo+'|'+vehicles[i].patrimonio;
+  const statusAnterior=vehicles[i].status;
+  const destino=document.getElementById('enviadoDestino').value.trim()||null;
+  vehicles[i].status='Enviado';
+  vehicles[i].destino=destino;
+  vehicles[i].dataSaida=new Date().toISOString();
+  persistUpsert(vehicles[i], oldKey, statusAnterior);
+  logStatusHistory(vehicles[i], statusAnterior);
+  closeEnviadoPopup();
+  render();
+}
+
+function closeEnviadoPopup(){
+  document.getElementById('modalEnviado').classList.remove('open');
+  enviadoTargetIdx=null;
+  render();
+}
+document.getElementById('modalEnviado').addEventListener('click',function(e){if(e.target===this)closeEnviadoPopup();});
+
+// ==================== CHECKLIST ====================
+const CHECKLIST_GROUPS=[
+  {grupo:'Cabos e Controles', itens:['Cabo ATX','Cabo Bipolar','Carregador','Controle Remoto Original','Controle Remoto Auxiliar','Suporte de Controle','Manoplas']},
+  {grupo:'Barra Direcional', itens:['Barra Horizontal do T','Acabamento da barra direcional','Regulador de altura adaptado','Níveis de altura']},
+  {grupo:'Torre', itens:['Torre','Trava original reguladora de altura','Acabamento da base da torre','Pintura']},
+  {grupo:'Estrutura e Carenagem', itens:['Pé de apoio','Tapete de Silicone','Console Central','Moldura Tapete','Fender Para-lama (metálico)','Para-lama (plástico)','Carenagem frontal','Carenagem traseira','Carenagem inferior de proteção','Caixa redutora esquerda','Caixa redutora direita','Coupling esquerdo','Coupling direito','Rodas','Calotas','Pneus']},
+  {grupo:'Elétrica', itens:['Botão On/Off','Conector de carga','LEDs Frontais','LEDs Traseiros']},
+  {grupo:'Eletrônica', itens:['Bateria 1','Bateria 2','Placa RF/Display','Placa de controle de carga','Placa Mãe','Motor Esquerdo','Motor Direito']}
+];
+
+let checklistTargetIdx=null;
+let checklistState={}; // { 'item': 'OK'|'NOK'|'NÃO POSSUI' }
+
+function openChecklist(i){
+  checklistTargetIdx=i;
+  const v=vehicles[i];
+  checklistState=v.checklist ? {...v.checklist} : {};
+  document.getElementById('checklistVehicleInfo').textContent=v.modelo+' — Patrimônio '+v.patrimonio+(v.tecnico?' | Técnico: '+v.tecnico:'');
+  renderChecklistItems();
+  document.getElementById('modalChecklist').classList.add('open');
+}
+
+function renderChecklistItems(){
+  const container=document.getElementById('checklistItems');
+  container.innerHTML=CHECKLIST_GROUPS.map(g=>`
+    <div class="checklist-group">
+      <div class="checklist-group-title">${g.grupo}</div>
+      ${g.itens.map(item=>{
+        const val=checklistState[item]||null;
+        return `<div class="checklist-item">
+          <span class="checklist-item-name">${item}</span>
+          <div class="checklist-btns">
+            <button class="chk-btn ok${val==='OK'?' active':''}" onclick="setChecklistItem('${item.replace(/'/g,"\\'")}','OK')">OK</button>
+            <button class="chk-btn nok${val==='NOK'?' active':''}" onclick="setChecklistItem('${item.replace(/'/g,"\\'")}','NOK')">NOK</button>
+            <button class="chk-btn np${val==='NÃO POSSUI'?' active':''}" onclick="setChecklistItem('${item.replace(/'/g,"\\'")}','NÃO POSSUI')">N/P</button>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  `).join('');
+}
+
+function setChecklistItem(item, val){
+  if(checklistState[item]===val){
+    delete checklistState[item]; // toggle off
+  } else {
+    checklistState[item]=val;
+  }
+  renderChecklistItems();
+}
+
+async function saveChecklist(){
+  if(checklistTargetIdx===null)return;
+  const i=checklistTargetIdx;
+  const oldKey=vehicles[i].modelo+'|'+vehicles[i].patrimonio;
+  vehicles[i].checklist=checklistState;
+  vehicles[i].checklistData=new Date().toISOString();
+  await persistUpsert(vehicles[i], oldKey, null);
+  closeChecklist();
+}
+
+function closeChecklist(){
+  document.getElementById('modalChecklist').classList.remove('open');
+  checklistTargetIdx=null;
+}
+document.getElementById('modalChecklist').addEventListener('click',function(e){if(e.target===this)closeChecklist();});
+
+// ==================== RELATÓRIO ====================
+
   const now=new Date();
   const dia=String(now.getDate()).padStart(2,'0');
   const mes=String(now.getMonth()+1).padStart(2,'0');
