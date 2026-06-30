@@ -1072,8 +1072,6 @@ function saveVehicle(){
 }
 
 
-function buildReportText(){
-
 // ==================== TÉCNICO ====================
 let technicianTargetIdx=null;
 let technicianTargetStatus=null;
@@ -1083,7 +1081,6 @@ function openTechnicianPopup(i, newStatus){
   technicianTargetStatus=newStatus;
   const v=vehicles[i];
   document.getElementById('techVehicleInfo').textContent=v.modelo+' — Patrimônio '+v.patrimonio;
-  // pré-seleciona técnico já salvo se houver
   document.querySelectorAll('.tech-btn').forEach(b=>{
     b.style.background=v.tecnico&&b.textContent===v.tecnico?'#e6f2f3':'#ffffff';
     b.style.borderColor=v.tecnico&&b.textContent===v.tecnico?'#0e6e7a':'';
@@ -1108,7 +1105,6 @@ function selectTechnician(nome){
 function closeTechnicianPopup(){
   document.getElementById('modalTechnician').classList.remove('open');
   technicianTargetIdx=null;
-  // reverte o select para o status atual (pois o usuário cancelou)
   render();
 }
 document.getElementById('modalTechnician').addEventListener('click',function(e){if(e.target===this)closeTechnicianPopup();});
@@ -1157,7 +1153,7 @@ const CHECKLIST_GROUPS=[
 ];
 
 let checklistTargetIdx=null;
-let checklistState={}; // { 'item': 'OK'|'NOK'|'NÃO POSSUI' }
+let checklistState={};
 
 function openChecklist(i){
   checklistTargetIdx=i;
@@ -1175,12 +1171,13 @@ function renderChecklistItems(){
       <div class="checklist-group-title">${g.grupo}</div>
       ${g.itens.map(item=>{
         const val=checklistState[item]||null;
+        const key=item.replace(/'/g,"\\'");
         return `<div class="checklist-item">
           <span class="checklist-item-name">${item}</span>
           <div class="checklist-btns">
-            <button class="chk-btn ok${val==='OK'?' active':''}" onclick="setChecklistItem('${item.replace(/'/g,"\\'")}','OK')">OK</button>
-            <button class="chk-btn nok${val==='NOK'?' active':''}" onclick="setChecklistItem('${item.replace(/'/g,"\\'")}','NOK')">NOK</button>
-            <button class="chk-btn np${val==='NÃO POSSUI'?' active':''}" onclick="setChecklistItem('${item.replace(/'/g,"\\'")}','NÃO POSSUI')">N/P</button>
+            <button class="chk-btn ok${val==='OK'?' active':''}" onclick="setChecklistItem('${key}','OK')">OK</button>
+            <button class="chk-btn nok${val==='NOK'?' active':''}" onclick="setChecklistItem('${key}','NOK')">NOK</button>
+            <button class="chk-btn np${val==='NÃO POSSUI'?' active':''}" onclick="setChecklistItem('${key}','NÃO POSSUI')">N/P</button>
           </div>
         </div>`;
       }).join('')}
@@ -1189,11 +1186,8 @@ function renderChecklistItems(){
 }
 
 function setChecklistItem(item, val){
-  if(checklistState[item]===val){
-    delete checklistState[item]; // toggle off
-  } else {
-    checklistState[item]=val;
-  }
+  if(checklistState[item]===val){ delete checklistState[item]; }
+  else { checklistState[item]=val; }
   renderChecklistItems();
 }
 
@@ -1214,8 +1208,7 @@ function closeChecklist(){
 document.getElementById('modalChecklist').addEventListener('click',function(e){if(e.target===this)closeChecklist();});
 
 // ==================== RELATÓRIO ====================
-
-  const now=new Date();
+function buildReportText(){
   const dia=String(now.getDate()).padStart(2,'0');
   const mes=String(now.getMonth()+1).padStart(2,'0');
   const ano=now.getFullYear();
