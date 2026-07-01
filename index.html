@@ -71,6 +71,37 @@ body{background:#f3f3f3;font-family:'Segoe UI',Arial,sans-serif;color:#16424a;mi
 .btn-wp:active{background:#0d1f12}
 .btn-chart{background:#ffffff;color:#c084fc;border:1.5px solid #c084fc;padding:0 16px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;height:42px;width:100%;box-shadow:0 0 8px #c084fc33}
 .btn-chart:active{background:#1a0a2a}
+.btn-dashboard{background:#0d0d0d;color:#f59e0b;border:1.5px solid #f59e0b;padding:0 16px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;height:42px;width:100%;box-shadow:0 0 8px #f59e0b33}
+.btn-dashboard:active{background:#1a1200}
+
+/* DASHBOARD */
+.modal-dashboard{background:#f3f3f3;border:1.5px solid #f59e0b;border-radius:16px 16px 0 0;padding:1.5rem 1.2rem;width:100%;max-width:700px;max-height:93vh;overflow-y:auto;box-shadow:0 0 30px #f59e0b22}
+@media(min-width:500px){.modal-dashboard{border-radius:16px}}
+.modal-dashboard h2{color:#16424a;font-size:17px;font-weight:700;margin-bottom:1rem;display:flex;align-items:center;gap:8px}
+.dash-period{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:1.2rem;background:#ffffff;border:1px solid #0e6e7a33;padding:.8rem 1rem;border-radius:10px}
+.dash-period label{font-size:12px;color:#3f8c97;font-weight:700}
+.dash-period input[type=date]{background:#f3f3f3;border:1px solid #0e6e7a44;color:#16424a;padding:6px 10px;border-radius:7px;font-size:13px;height:36px}
+.btn-dash-run{background:#0e6e7a;color:#fff;border:none;border-radius:7px;padding:0 16px;height:36px;font-size:13px;font-weight:700;cursor:pointer}
+.btn-dash-run:active{background:#0a5860}
+.dash-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.2rem}
+@media(max-width:500px){.dash-grid{grid-template-columns:repeat(2,1fr)}}
+.dash-card{background:#ffffff;border:1.5px solid #0e6e7a22;border-radius:10px;padding:.9rem;text-align:center}
+.dash-card .d-num{font-size:28px;font-weight:700;color:#0e6e7a}
+.dash-card .d-lbl{font-size:11px;color:#3f8c97;margin-top:3px;text-transform:uppercase;letter-spacing:.4px}
+.dash-card .d-delta{font-size:11px;margin-top:4px;font-weight:600}
+.dash-card .d-delta.up{color:#059669}
+.dash-card .d-delta.down{color:#dc2626}
+.dash-card .d-delta.same{color:#6b7280}
+.dash-section{background:#ffffff;border:1px solid #0e6e7a22;border-radius:10px;padding:1rem;margin-bottom:1rem}
+.dash-section h3{font-size:13px;font-weight:700;color:#16424a;margin-bottom:.8rem;display:flex;align-items:center;gap:6px}
+.dash-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.dash-bar-label{font-size:12px;color:#16424a;width:120px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dash-bar-track{flex:1;background:#e6f2f3;border-radius:20px;height:16px;overflow:hidden}
+.dash-bar-fill{height:100%;border-radius:20px;background:#0e6e7a;transition:width .4s}
+.dash-bar-val{font-size:12px;color:#3f8c97;width:24px;text-align:right;flex-shrink:0}
+.dash-empty{text-align:center;color:#7fa8af;font-size:13px;padding:1rem 0}
+.dash-canvas-wrap{position:relative;height:180px}
+.dash-period-label{font-size:11px;color:#7fa8af;text-align:right;margin-bottom:.4rem}
 .count-info{font-size:12px;color:#7fa8af;margin-bottom:8px}
 
 .table-wrap{background:#ffffff;border:1.5px solid #1a9aa833;border-radius:12px;overflow:hidden;overflow-x:auto;-webkit-overflow-scrolling:touch}
@@ -224,6 +255,7 @@ tr:hover td{background:#0e6e7a08}
     <button class="btn-add" onclick="openAdd()">＋ Adicionar Veículo</button>
     <button class="btn-wp" onclick="openWP()">📋 Relatório WhatsApp</button>
     <button class="btn-chart" onclick="openCharts()">📊 Gráficos (15 dias)</button>
+    <button class="btn-dashboard" onclick="openDashboard()">📈 Dashboard</button>
   </div>
   <div class="controls" id="viewOnlyControls">
     <span class="view-only-tag" style="align-self:center;flex:1">👁️ Modo visualização — você está vendo o Kanban como visitante autorizado</span>
@@ -396,6 +428,96 @@ tr:hover td{background:#0e6e7a08}
       <tbody id="tbodyEnviados"></tbody>
     </table>
     <div class="empty" id="emptyEnviados" style="display:none">Nenhum veículo enviado ainda.</div>
+  </div>
+</div>
+
+<!-- MODAL DASHBOARD -->
+<div class="modal-bg" id="modalDashboard">
+  <div class="modal-dashboard">
+    <h2>📈 Dashboard — Análise por Período</h2>
+
+    <div class="dash-period">
+      <label>De</label>
+      <input type="date" id="dashFrom"/>
+      <label>Até</label>
+      <input type="date" id="dashTo"/>
+      <button class="btn-dash-run" onclick="runDashboard()">Gerar</button>
+    </div>
+
+    <div id="dashContent" style="display:none">
+      <div class="dash-period-label" id="dashPeriodLabel"></div>
+
+      <!-- Cartões de resumo -->
+      <div class="dash-grid">
+        <div class="dash-card">
+          <div class="d-num" id="dEntradas">—</div>
+          <div class="d-lbl">Entradas no Kanban</div>
+          <div class="d-delta" id="dEntradasDelta"></div>
+        </div>
+        <div class="dash-card">
+          <div class="d-num" id="dStandBy">—</div>
+          <div class="d-lbl">Finalizados (Stand By)</div>
+          <div class="d-delta" id="dStandByDelta"></div>
+        </div>
+        <div class="dash-card">
+          <div class="d-num" id="dEnviados">—</div>
+          <div class="d-lbl">Enviados</div>
+          <div class="d-delta" id="dEnviadosDelta"></div>
+        </div>
+        <div class="dash-card">
+          <div class="d-num" id="dVistoria">—</div>
+          <div class="d-lbl">Vistorias Realizadas</div>
+          <div class="d-delta" id="dVistoriaDelta"></div>
+        </div>
+        <div class="dash-card">
+          <div class="d-num" id="dAtivos">—</div>
+          <div class="d-lbl">Em Produção Hoje</div>
+          <div class="d-delta same"></div>
+        </div>
+        <div class="dash-card">
+          <div class="d-num" id="dAguardando">—</div>
+          <div class="d-lbl">Aguardando Manutenção</div>
+          <div class="d-delta same"></div>
+        </div>
+      </div>
+
+      <!-- Gráfico de linha: entradas vs finalizados por dia -->
+      <div class="dash-section">
+        <h3>📊 Entradas vs Finalizados por dia</h3>
+        <div class="dash-canvas-wrap"><canvas id="dashLineChart"></canvas></div>
+      </div>
+
+      <!-- Ranking de técnicos -->
+      <div class="dash-section">
+        <h3>🔧 Ranking de Técnicos (vistorias)</h3>
+        <div id="dashTechRanking"></div>
+      </div>
+
+      <!-- Modelos mais frequentes -->
+      <div class="dash-section">
+        <h3>🏍️ Modelos que mais entraram</h3>
+        <div id="dashModelosEntrada"></div>
+      </div>
+
+      <div class="dash-section">
+        <h3>✅ Modelos mais finalizados (Stand By)</h3>
+        <div id="dashModelosStandBy"></div>
+      </div>
+
+      <!-- Comparativo período anterior -->
+      <div class="dash-section">
+        <h3>📅 Comparativo com período anterior</h3>
+        <div class="dash-canvas-wrap"><canvas id="dashCompChart"></canvas></div>
+      </div>
+    </div>
+
+    <div id="dashEmpty" style="display:none" class="dash-empty">
+      ⚠️ Nenhum dado encontrado para o período selecionado. O histórico registra eventos a partir do momento em que foram feitos no sistema.
+    </div>
+
+    <div class="modal-btns" style="margin-top:1rem">
+      <button class="btn-cancel" onclick="closeDashboard()">Fechar</button>
+    </div>
   </div>
 </div>
 
@@ -1356,6 +1478,189 @@ async function openCharts(){
 
 function closeCharts(){ document.getElementById('modalCharts').classList.remove('open'); }
 document.getElementById('modalCharts').addEventListener('click',function(e){if(e.target===this)closeCharts();});
+
+// ==================== DASHBOARD ====================
+let dashLineChartInst=null;
+let dashCompChartInst=null;
+
+function openDashboard(){
+  if(!isAdmin)return;
+  // pré-preenche com últimos 15 dias
+  const today=new Date();
+  const from=new Date(today); from.setDate(from.getDate()-14);
+  document.getElementById('dashFrom').value=from.toISOString().slice(0,10);
+  document.getElementById('dashTo').value=today.toISOString().slice(0,10);
+  document.getElementById('dashContent').style.display='none';
+  document.getElementById('dashEmpty').style.display='none';
+  document.getElementById('modalDashboard').classList.add('open');
+}
+
+function closeDashboard(){
+  document.getElementById('modalDashboard').classList.remove('open');
+}
+document.getElementById('modalDashboard').addEventListener('click',function(e){if(e.target===this)closeDashboard();});
+
+async function runDashboard(){
+  if(!fbReady)return;
+  const fromStr=document.getElementById('dashFrom').value;
+  const toStr=document.getElementById('dashTo').value;
+  if(!fromStr||!toStr){alert('Selecione as duas datas.');return;}
+
+  const from=new Date(fromStr+'T00:00:00');
+  const to=new Date(toStr+'T23:59:59');
+  const diffMs=to-from;
+  const prevTo=new Date(from.getTime()-1);
+  const prevFrom=new Date(prevTo.getTime()-diffMs);
+
+  document.getElementById('dashContent').style.display='none';
+  document.getElementById('dashEmpty').style.display='none';
+  document.getElementById('dashPeriodLabel').textContent=
+    'Período: '+from.toLocaleDateString('pt-BR')+' até '+to.toLocaleDateString('pt-BR');
+
+  // busca histórico completo
+  const {historyCol,query,getDocs}=window.__fb;
+  let allEvents=[];
+  try{
+    const snap=await getDocs(historyCol);
+    snap.forEach(d=>{
+      const data=d.data();
+      if(data.timestamp){
+        const ts=data.timestamp.toDate?data.timestamp.toDate():new Date(data.timestamp);
+        allEvents.push({...data, ts});
+      }
+    });
+  }catch(e){console.error('Erro ao buscar histórico',e);}
+
+  // filtra por período atual e anterior
+  const inPeriod=(ts)=>ts>=from&&ts<=to;
+  const inPrev=(ts)=>ts>=prevFrom&&ts<=prevTo;
+
+  const curr={
+    entradas: allEvents.filter(e=>e.statusNovo==='Aguardando Manutenção'&&inPeriod(e.ts)),
+    standBy:  allEvents.filter(e=>e.statusNovo==='Stand By'&&inPeriod(e.ts)),
+    enviados: allEvents.filter(e=>e.statusNovo==='Enviado'&&inPeriod(e.ts)),
+    vistoria: allEvents.filter(e=>e.statusNovo==='Em Vistoria'&&inPeriod(e.ts)),
+  };
+  const prev={
+    entradas: allEvents.filter(e=>e.statusNovo==='Aguardando Manutenção'&&inPrev(e.ts)),
+    standBy:  allEvents.filter(e=>e.statusNovo==='Stand By'&&inPrev(e.ts)),
+    enviados: allEvents.filter(e=>e.statusNovo==='Enviado'&&inPrev(e.ts)),
+    vistoria: allEvents.filter(e=>e.statusNovo==='Em Vistoria'&&inPrev(e.ts)),
+  };
+
+  const totalEvents=Object.values(curr).reduce((a,b)=>a+b.length,0);
+
+  // dados atuais do kanban (snapshot atual)
+  const emProducao=vehicles.filter(v=>v.status==='Em Produção').length;
+  const aguardando=vehicles.filter(v=>v.status==='Aguardando Manutenção').length;
+
+  if(totalEvents===0&&emProducao===0){
+    document.getElementById('dashEmpty').style.display='block';
+    return;
+  }
+
+  // ---- cartões ----
+  function setCard(id, deltaId, val, prevVal){
+    document.getElementById(id).textContent=val;
+    const diff=val-prevVal;
+    const el=document.getElementById(deltaId);
+    if(!el)return;
+    if(diff>0){ el.textContent='▲ '+diff+' vs período anterior'; el.className='d-delta up'; }
+    else if(diff<0){ el.textContent='▼ '+Math.abs(diff)+' vs período anterior'; el.className='d-delta down'; }
+    else { el.textContent='= igual ao período anterior'; el.className='d-delta same'; }
+  }
+  setCard('dEntradas','dEntradasDelta',curr.entradas.length,prev.entradas.length);
+  setCard('dStandBy','dStandByDelta',curr.standBy.length,prev.standBy.length);
+  setCard('dEnviados','dEnviadosDelta',curr.enviados.length,prev.enviados.length);
+  setCard('dVistoria','dVistoriaDelta',curr.vistoria.length,prev.vistoria.length);
+  document.getElementById('dAtivos').textContent=emProducao;
+  document.getElementById('dAguardando').textContent=aguardando;
+
+  // ---- gráfico de linha diário ----
+  const days=[];
+  for(let d=new Date(from);d<=to;d.setDate(d.getDate()+1)){
+    days.push(new Date(d).toISOString().slice(0,10));
+  }
+  const countByDay=(events)=>{
+    const map={};
+    days.forEach(d=>map[d]=0);
+    events.forEach(e=>{ const k=e.ts.toISOString().slice(0,10); if(k in map)map[k]++; });
+    return days.map(d=>map[d]);
+  };
+  const ctx1=document.getElementById('dashLineChart').getContext('2d');
+  if(dashLineChartInst)dashLineChartInst.destroy();
+  dashLineChartInst=new Chart(ctx1,{
+    type:'line',
+    data:{
+      labels:days.map(d=>d.slice(5)),
+      datasets:[
+        {label:'Entradas',data:countByDay(curr.entradas),borderColor:'#0e6e7a',backgroundColor:'#0e6e7a22',tension:.3,fill:true},
+        {label:'Finalizados',data:countByDay(curr.standBy),borderColor:'#059669',backgroundColor:'#05966922',tension:.3,fill:true},
+        {label:'Enviados',data:countByDay(curr.enviados),borderColor:'#f59e0b',backgroundColor:'#f59e0b22',tension:.3,fill:true},
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#16424a',font:{size:11}}}},
+      scales:{x:{ticks:{color:'#3f8c97',font:{size:9}},grid:{color:'#0e6e7a11'}},
+              y:{ticks:{color:'#3f8c97',font:{size:10},stepSize:1},grid:{color:'#0e6e7a11'},beginAtZero:true}}}
+  });
+
+  // ---- ranking técnicos ----
+  const techCount={};
+  curr.vistoria.forEach(e=>{
+    if(e.tecnico){ techCount[e.tecnico]=(techCount[e.tecnico]||0)+1; }
+  });
+  const techSorted=Object.entries(techCount).sort((a,b)=>b[1]-a[1]);
+  const maxTech=techSorted[0]?techSorted[0][1]:1;
+  document.getElementById('dashTechRanking').innerHTML=techSorted.length?
+    techSorted.map(([nome,n])=>`
+      <div class="dash-bar-row">
+        <div class="dash-bar-label" title="${nome}">${nome}</div>
+        <div class="dash-bar-track"><div class="dash-bar-fill" style="width:${Math.round(n/maxTech*100)}%"></div></div>
+        <div class="dash-bar-val">${n}</div>
+      </div>`).join('') :
+    '<div class="dash-empty">Nenhuma vistoria registrada no período.</div>';
+
+  // ---- modelos mais frequentes: entradas ----
+  function topModelos(events, containerId){
+    const mc={};
+    events.forEach(e=>{ if(e.modelo)mc[e.modelo]=(mc[e.modelo]||0)+1; });
+    const sorted=Object.entries(mc).sort((a,b)=>b[1]-a[1]).slice(0,5);
+    const max=sorted[0]?sorted[0][1]:1;
+    document.getElementById(containerId).innerHTML=sorted.length?
+      sorted.map(([m,n])=>`
+        <div class="dash-bar-row">
+          <div class="dash-bar-label">${m}</div>
+          <div class="dash-bar-track"><div class="dash-bar-fill" style="width:${Math.round(n/max*100)}%;background:#3f8c97"></div></div>
+          <div class="dash-bar-val">${n}</div>
+        </div>`).join('') :
+      '<div class="dash-empty">Nenhum dado.</div>';
+  }
+  topModelos(curr.entradas,'dashModelosEntrada');
+  topModelos(curr.standBy,'dashModelosStandBy');
+
+  // ---- comparativo período anterior (barras lado a lado) ----
+  const cats=['Entradas','Finalizados','Enviados','Vistorias'];
+  const currVals=[curr.entradas.length,curr.standBy.length,curr.enviados.length,curr.vistoria.length];
+  const prevVals=[prev.entradas.length,prev.standBy.length,prev.enviados.length,prev.vistoria.length];
+  const ctx2=document.getElementById('dashCompChart').getContext('2d');
+  if(dashCompChartInst)dashCompChartInst.destroy();
+  dashCompChartInst=new Chart(ctx2,{
+    type:'bar',
+    data:{
+      labels:cats,
+      datasets:[
+        {label:'Período atual',data:currVals,backgroundColor:'#0e6e7a',borderRadius:6},
+        {label:'Período anterior',data:prevVals,backgroundColor:'#3f8c9777',borderRadius:6},
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#16424a',font:{size:11}}}},
+      scales:{x:{ticks:{color:'#3f8c97',font:{size:11}},grid:{display:false}},
+              y:{ticks:{color:'#3f8c97',stepSize:1},grid:{color:'#0e6e7a11'},beginAtZero:true}}}
+  });
+
+  document.getElementById('dashContent').style.display='block';
+}
 
 function copyMsg(){
   const txt=document.getElementById('wpMsg').textContent;
