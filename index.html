@@ -372,6 +372,29 @@ tr:last-child td{border-bottom:none}
   </div>
 </div>
 
+<!-- Modal: Editar Enviado (somente admin) -->
+<div class="modal-bg" id="modalEditEnviado">
+  <div class="modal">
+    <h2>✏️ Editar Enviado</h2>
+    <div id="editEnviadoInfo" style="font-size:13px;font-weight:700;color:#16424a;margin-bottom:1rem;background:#e6f2f3;padding:8px 12px;border-radius:8px"></div>
+    <label>Destino</label>
+    <input id="editEnviadoDestino" placeholder="Destino (opcional)" autocomplete="off"/>
+    <label>Técnico</label>
+    <select id="editEnviadoTecnico">
+      <option value="">Sem técnico</option>
+      <option value="Aran Monteiro">Aran Monteiro</option>
+      <option value="Brandon David">Brandon David</option>
+      <option value="Maxwel Gatti">Maxwel Gatti</option>
+    </select>
+    <label>Data de saída</label>
+    <input type="date" id="editEnviadoDataSaida"/>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeEditEnviado()">Cancelar</button>
+      <button class="btn-save" onclick="saveEditEnviado()">Salvar</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal: Checklist de Vistoria -->
 <div class="modal-bg" id="modalChecklist">
   <div class="modal" style="max-width:560px">
@@ -401,7 +424,7 @@ tr:last-child td{border-bottom:none}
   <div class="table-wrap">
     <table>
       <thead><tr>
-        <th>Modelo</th><th>Patrimônio</th><th>Técnico</th><th>Destino</th><th>Entrada</th><th>Saída</th>
+        <th>Modelo</th><th>Patrimônio</th><th>Técnico</th><th>Destino</th><th>Entrada</th><th>Saída</th><th id="thEnviadosAcoes" style="display:none;width:70px">Ações</th>
       </tr></thead>
       <tbody id="tbodyEnviados"></tbody>
     </table>
@@ -664,13 +687,15 @@ let vehicles=[];
 let editIndex=-1;
 let fbReady=false;
 let docIds={}; // map "MODELO|PATRIMONIO" -> firestore doc id
-let isLoggedIn=false;   // true para admin OU viewer (qualquer um autenticado)
+let isLoggedIn=false;   // true para admin OU viewer OU expedicao
 let isAdmin=false;      // true só para matheussmmachado@outlook.com
-let isViewer=false;     // true para e-mails @brmobility.com.br autorizados
+let isViewer=false;     // true para e-mails @brmobility.com.br autorizados (só leitura)
+let isExpedicao=false;  // true para expedicao@brmobility.com.br (leitura + converter Stand By → Enviado)
 let currentUserEmail=null;
 
 const ADMIN_EMAIL='matheussmmachado@outlook.com';
-const VIEWER_PASSWORD='BRMobility2026'; // senha interna fixa para contas de visualização — nunca exibida ao usuário
+const EXPEDICAO_EMAIL='expedicao@brmobility.com.br';
+const VIEWER_PASSWORD='BRMobility2026';
 const AUTHORIZED_VIEWER_EMAILS=[
   'falecom@brmobility.com.br',
   'falecom2@brmobility.com.br',
@@ -678,9 +703,10 @@ const AUTHORIZED_VIEWER_EMAILS=[
   'jessica@brmobility.com.br',
   'adm@brmobility.com.br',
   'adm2@brmobility.com.br',
-  'comercial@brmobility.com.br',
   'vanessa@brmobility.com.br',
-  'financeiro@brmobility.com.br'
+  'comercial@brmobility.com.br',
+  'financeiro@brmobility.com.br',
+  'expedicao@brmobility.com.br'
 ];
 
 function loadCache(){try{const d=localStorage.getItem(STORAGE_KEY);if(d)return JSON.parse(d);}catch(e){}return [];}
@@ -696,7 +722,6 @@ function setPermissionUI(){
   const blockedScreen=document.getElementById('blockedScreen');
 
   if(!isLoggedIn){
-    // ninguém logado: bloqueia completamente a visualização dos dados
     if(appWrap) appWrap.style.display='none';
     if(blockedScreen) blockedScreen.style.display='flex';
   } else {
@@ -719,7 +744,8 @@ function setPermissionUI(){
       userChip.className='user-chip';
       loginArea.appendChild(userChip);
     }
-    userChip.innerHTML=(isAdmin?'● editando':'👁️ visualizando')+'<button class="btn-logout" onclick="doLogout()">Sair</button>';
+    const label=isAdmin?'● admin':isExpedicao?'📦 expedição':'👁️ visualizando';
+    userChip.innerHTML=label+'<button class="btn-logout" onclick="doLogout()">Sair</button>';
   } else {
     btnOpenLogin.style.display='inline-block';
     if(userChip) userChip.remove();
@@ -756,10 +782,11 @@ window.addEventListener('fb-ready', ()=>{
   fbReady=true;
 
   onAuthStateChanged(auth,(user)=>{
-    currentUserEmail=user?user.email:null;
+    currentUserEmail=user?user.email.toLowerCase():null;
     isAdmin = !!user && currentUserEmail===ADMIN_EMAIL;
-    isViewer = !!user && AUTHORIZED_VIEWER_EMAILS.includes((currentUserEmail||'').toLowerCase());
-    isLoggedIn = isAdmin || isViewer;
+    isExpedicao = !!user && currentUserEmail===EXPEDICAO_EMAIL;
+    isViewer = !!user && !isAdmin && !isExpedicao && AUTHORIZED_VIEWER_EMAILS.includes(currentUserEmail||'');
+    isLoggedIn = isAdmin || isViewer || isExpedicao;
     setPermissionUI();
   });
 
@@ -1020,6 +1047,7 @@ function render(){
       <td>${isAdmin?statusSelectHTML(v.status,v._i):`<span class="badge ${badgeClass(v.status)}">${v.status}</span>`}
         ${isAdmin&&v.status==='Em Vistoria'?`<button onclick="openChecklist(${v._i},false)" style="margin-left:6px;background:#0e6e7a;color:#fff;border:none;border-radius:5px;padding:3px 8px;font-size:11px;font-weight:700;cursor:pointer">📋 Vistoria</button>`:''}
         ${v.status==='Stand By'&&v.checklist?`<button onclick="openChecklist(${v._i},true)" style="margin-left:6px;background:#f3f3f3;color:#0e6e7a;border:1px solid #0e6e7a;border-radius:5px;padding:3px 8px;font-size:11px;font-weight:700;cursor:pointer">👁️ Ver Vistoria</button>`:''}
+        ${isExpedicao&&v.status==='Stand By'?`<button onclick="openEnviadoPopup(${v._i})" style="margin-left:6px;background:#f59e0b;color:#fff;border:none;border-radius:5px;padding:3px 8px;font-size:11px;font-weight:700;cursor:pointer">📦 Enviar</button>`:''}
         ${v.tecnico?`<span style="font-size:10px;color:#3f8c97;display:block;margin-top:2px">🔧 ${v.tecnico}</span>`:''}
       </td>
       ${isAdmin?`<td><div class="action-btns">
@@ -1029,25 +1057,34 @@ function render(){
     </tr>`).join('');
   }
 
-  // Painel de Enviados (só para admin)
+  // Painel de Enviados (admin + expedição)
   const enviadosPanel=document.getElementById('enviadosPanel');
+  const thEnvAcoes=document.getElementById('thEnviadosAcoes');
   if(enviadosPanel){
-    if(isAdmin){
+    if(isAdmin||isExpedicao){
       enviadosPanel.style.display='block';
+      if(thEnvAcoes) thEnvAcoes.style.display=isAdmin?'':'none';
       const enviados=vehicles.filter(v=>v.status==='Enviado');
       const tbodyEnv=document.getElementById('tbodyEnviados');
       const emptyEnv=document.getElementById('emptyEnviados');
       if(enviados.length===0){tbodyEnv.innerHTML='';emptyEnv.style.display='block';}
       else{
         emptyEnv.style.display='none';
-        tbodyEnv.innerHTML=enviados.map(v=>`<tr>
-          <td style="font-weight:700">${v.modelo}</td>
-          <td style="font-family:monospace;font-size:13px">${v.patrimonio}</td>
-          <td>${v.tecnico||'—'}</td>
-          <td>${v.destino||'—'}</td>
-          <td>${v.dataEntrada?new Date(v.dataEntrada).toLocaleDateString('pt-BR'):'—'}</td>
-          <td>${v.dataSaida?new Date(v.dataSaida).toLocaleDateString('pt-BR'):'—'}</td>
-        </tr>`).join('');
+        tbodyEnv.innerHTML=enviados.map(v=>{
+          const ri=vehicles.indexOf(v);
+          return `<tr>
+            <td style="font-weight:700">${v.modelo}</td>
+            <td style="font-family:monospace;font-size:12px">${v.patrimonio}</td>
+            <td>${v.tecnico||'—'}</td>
+            <td>${v.destino||'—'}</td>
+            <td>${v.dataEntrada?new Date(v.dataEntrada).toLocaleDateString('pt-BR'):'—'}</td>
+            <td>${v.dataSaida?new Date(v.dataSaida).toLocaleDateString('pt-BR'):'—'}</td>
+            ${isAdmin?`<td><div class="action-btns">
+              <button class="btn-edit" onclick="openEditEnviado(${ri})" title="Editar">✏️</button>
+              <button class="btn-del" onclick="delEnviado(${ri})" title="Remover">✕</button>
+            </div></td>`:''}
+          </tr>`;
+        }).join('');
       }
     } else {
       enviadosPanel.style.display='none';
@@ -1215,6 +1252,7 @@ document.getElementById('modalTechnician').addEventListener('click',function(e){
 let enviadoTargetIdx=null;
 
 function openEnviadoPopup(i){
+  if(!isAdmin&&!isExpedicao)return;
   enviadoTargetIdx=i;
   const v=vehicles[i];
   document.getElementById('enviadoVehicleInfo').textContent=v.modelo+' — Patrimônio '+v.patrimonio;
@@ -1224,6 +1262,7 @@ function openEnviadoPopup(i){
 
 function confirmEnviado(){
   if(enviadoTargetIdx===null)return;
+  if(!isAdmin&&!isExpedicao)return;
   const i=enviadoTargetIdx;
   const oldKey=vehicles[i].modelo+'|'+vehicles[i].patrimonio;
   const statusAnterior=vehicles[i].status;
@@ -1243,6 +1282,53 @@ function closeEnviadoPopup(){
   render();
 }
 document.getElementById('modalEnviado').addEventListener('click',function(e){if(e.target===this)closeEnviadoPopup();});
+
+// ==================== EDITAR/APAGAR ENVIADOS (só admin) ====================
+let editEnviadoIdx=null;
+
+function openEditEnviado(i){
+  if(!isAdmin)return;
+  editEnviadoIdx=i;
+  const v=vehicles[i];
+  document.getElementById('editEnviadoInfo').textContent=v.modelo+' — Patrimônio '+v.patrimonio;
+  document.getElementById('editEnviadoDestino').value=v.destino||'';
+  document.getElementById('editEnviadoTecnico').value=v.tecnico||'';
+  if(v.dataSaida){
+    document.getElementById('editEnviadoDataSaida').value=new Date(v.dataSaida).toISOString().slice(0,10);
+  } else {
+    document.getElementById('editEnviadoDataSaida').value='';
+  }
+  document.getElementById('modalEditEnviado').classList.add('open');
+}
+
+function closeEditEnviado(){
+  document.getElementById('modalEditEnviado').classList.remove('open');
+  editEnviadoIdx=null;
+}
+
+async function saveEditEnviado(){
+  if(!isAdmin||editEnviadoIdx===null)return;
+  const i=editEnviadoIdx;
+  const oldKey=vehicles[i].modelo+'|'+vehicles[i].patrimonio;
+  vehicles[i].destino=document.getElementById('editEnviadoDestino').value.trim()||null;
+  vehicles[i].tecnico=document.getElementById('editEnviadoTecnico').value||null;
+  const dataSaidaVal=document.getElementById('editEnviadoDataSaida').value;
+  vehicles[i].dataSaida=dataSaidaVal?new Date(dataSaidaVal+'T12:00:00').toISOString():vehicles[i].dataSaida;
+  await persistUpsert(vehicles[i], oldKey, null);
+  closeEditEnviado();
+  render();
+}
+
+function delEnviado(i){
+  if(!isAdmin)return;
+  const v=vehicles[i];
+  if(!confirm('Remover permanentemente '+v.modelo+' - '+v.patrimonio+' dos enviados?'))return;
+  vehicles.splice(i,1);
+  persistDelete(v);
+  render();
+}
+
+document.getElementById('modalEditEnviado').addEventListener('click',function(e){if(e.target===this)closeEditEnviado();});
 
 // ==================== CHECKLIST ====================
 const CHECKLIST_GROUPS=[
