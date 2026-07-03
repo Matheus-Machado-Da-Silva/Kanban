@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
 <title>Kanban BRMobility</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, addDoc, query, where, getDocs, serverTimestamp, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -408,11 +409,13 @@ tr:last-child td{border-bottom:none}
     </div>
     <div id="checklistSaveBtns" class="modal-btns" style="display:none">
       <button class="btn-cancel" onclick="closeChecklist()">Cancelar</button>
-      <button class="btn-save" onclick="saveChecklist()">💾 Salvar Rascunho</button>
+      <button class="btn-save" style="background:#f59e0b;flex:1" onclick="downloadChecklistPDF()">⬇️ PDF</button>
+      <button class="btn-save" onclick="saveChecklist()">💾 Salvar</button>
     </div>
     <!-- Botões para visualização (Stand By, todos) -->
     <div id="checklistViewBtns" class="modal-btns" style="display:none">
       <button class="btn-cancel" onclick="closeChecklist()">Fechar</button>
+      <button class="btn-save" style="background:#f59e0b" onclick="downloadChecklistPDF()">⬇️ Download PDF</button>
     </div>
   </div>
 </div>
@@ -691,6 +694,7 @@ let isLoggedIn=false;   // true para admin OU viewer OU expedicao
 let isAdmin=false;      // true só para matheussmmachado@outlook.com
 let isViewer=false;     // true para e-mails @brmobility.com.br autorizados (só leitura)
 let isExpedicao=false;  // true para expedicao@brmobility.com.br (leitura + converter Stand By → Enviado)
+let isTecnico=false;    // true para técnicos (maxwel, aran, brandon): avançar status passo a passo
 let currentUserEmail=null;
 
 const ADMIN_EMAIL='matheussmmachado@outlook.com';
@@ -703,11 +707,19 @@ const AUTHORIZED_VIEWER_EMAILS=[
   'jessica@brmobility.com.br',
   'adm@brmobility.com.br',
   'adm2@brmobility.com.br',
-  'vanessa@brmobility.com.br',
-  'comercial@brmobility.com.br',
+  'supervisor@brmobility.com.br',
   'financeiro@brmobility.com.br',
-  'expedicao@brmobility.com.br'
+  'expedicao@brmobility.com.br',
+  'vanessa@brmobility.com.br',
+  'comercial@brmobility.com.br'
 ];
+const TECNICO_EMAILS=[
+  'maxwel@brmobility.com.br',
+  'aran@brmobility.com.br',
+  'brandon@brmobility.com.br'
+];
+// Sequência de status que os técnicos podem avançar (apenas para frente, passo a passo)
+const TECNICO_FLOW=['Aguardando Manutenção','Em Produção','Em Teste','Em Vistoria'];
 
 function loadCache(){try{const d=localStorage.getItem(STORAGE_KEY);if(d)return JSON.parse(d);}catch(e){}return [];}
 function saveCache(data){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(data));}catch(e){}}
@@ -744,7 +756,7 @@ function setPermissionUI(){
       userChip.className='user-chip';
       loginArea.appendChild(userChip);
     }
-    const label=isAdmin?'● admin':isExpedicao?'📦 expedição':'👁️ visualizando';
+    const label=isAdmin?'● admin':isExpedicao?'📦 expedição':isTecnico?'🔧 técnico':'👁️ visualizando';
     userChip.innerHTML=label+'<button class="btn-logout" onclick="doLogout()">Sair</button>';
   } else {
     btnOpenLogin.style.display='inline-block';
@@ -785,8 +797,9 @@ window.addEventListener('fb-ready', ()=>{
     currentUserEmail=user?user.email.toLowerCase():null;
     isAdmin = !!user && currentUserEmail===ADMIN_EMAIL;
     isExpedicao = !!user && currentUserEmail===EXPEDICAO_EMAIL;
-    isViewer = !!user && !isAdmin && !isExpedicao && AUTHORIZED_VIEWER_EMAILS.includes(currentUserEmail||'');
-    isLoggedIn = isAdmin || isViewer || isExpedicao;
+    isTecnico = !!user && TECNICO_EMAILS.includes(currentUserEmail||'');
+    isViewer = !!user && !isAdmin && !isExpedicao && !isTecnico && AUTHORIZED_VIEWER_EMAILS.includes(currentUserEmail||'');
+    isLoggedIn = isAdmin || isViewer || isExpedicao || isTecnico;
     setPermissionUI();
   });
 
@@ -854,7 +867,7 @@ async function doViewerLogin(){
     errBox.style.display='block';
     return;
   }
-  if(!AUTHORIZED_VIEWER_EMAILS.includes(emailRaw)){
+  if(!AUTHORIZED_VIEWER_EMAILS.includes(emailRaw) && !TECNICO_EMAILS.includes(emailRaw) && emailRaw!==EXPEDICAO_EMAIL){
     errBox.textContent='⚠️ Este e-mail não está autorizado a acessar o Kanban.';
     errBox.style.display='block';
     return;
@@ -960,6 +973,16 @@ function allKnownStatuses(){
 }
 
 function statusSelectHTML(currentVal,idx){
+  if(isTecnico && !isAdmin){
+    // Técnico vê apenas o status atual + próximo passo disponível
+    const currentIdx=TECNICO_FLOW.indexOf(currentVal);
+    const allowedStatuses=[currentVal];
+    if(currentIdx>=0 && currentIdx<TECNICO_FLOW.length-1){
+      allowedStatuses.push(TECNICO_FLOW[currentIdx+1]);
+    }
+    const opts=allowedStatuses.map(s=>`<option value="${s}"${s===currentVal?' selected':''}>${s}</option>`).join('');
+    return `<select class="inline-select" onchange="changeStatus(${idx},this.value)">${opts}</select>`;
+  }
   const all=allKnownStatuses();
   if(!all.includes(currentVal)) all.push(currentVal);
   const opts=all.map(s=>`<option value="${s}"${s===currentVal?' selected':''}>${s}</option>`).join('');
@@ -1093,12 +1116,27 @@ function render(){
 }
 
 function changeStatus(i,val){
-  if(!isAdmin)return;
+  if(!isAdmin && !isTecnico) return;
+
+  // Técnico só pode avançar passo a passo no fluxo definido
+  if(isTecnico && !isAdmin){
+    const currentStatus=vehicles[i].status;
+    const currentIdx=TECNICO_FLOW.indexOf(currentStatus);
+    const nextIdx=TECNICO_FLOW.indexOf(val);
+    if(nextIdx===-1 || nextIdx !== currentIdx+1){
+      alert('Você só pode avançar para o próximo status: '+
+        (TECNICO_FLOW[currentIdx+1]||'(nenhum disponível'));
+      render(); // reverte o select visualmente
+      return;
+    }
+  }
+
   if(val==='Em Vistoria'){
     openTechnicianPopup(i, val);
     return;
   }
   if(val==='Enviado'){
+    if(!isAdmin && !isExpedicao){render();return;}
     openEnviadoPopup(i);
     return;
   }
@@ -1332,12 +1370,12 @@ document.getElementById('modalEditEnviado').addEventListener('click',function(e)
 
 // ==================== CHECKLIST ====================
 const CHECKLIST_GROUPS=[
-  {grupo:'Cabos e Controles', itens:['Cabo ATX','Cabo Bipolar','Carregador','Controle Remoto Original','Controle Remoto Auxiliar','Suporte de Controle','Manoplas']},
+  {grupo:'Cabos e Controles', itens:['Cabo ATX','Cabo Bipolar','Carregador','Carregador de Estrobo','Controle Remoto Original','Controle Remoto Auxiliar','Suporte de Controle','Manoplas']},
   {grupo:'Barra Direcional', itens:['Barra Horizontal do T','Acabamento da barra direcional','Regulador de altura adaptado','Níveis de altura']},
   {grupo:'Torre', itens:['Torre','Trava original reguladora de altura','Acabamento da base da torre','Pintura']},
-  {grupo:'Estrutura e Carenagem', itens:['Pé de apoio','Tapete de Silicone','Console Central','Moldura Tapete','Fender Para-lama (metálico)','Para-lama (plástico)','Carenagem frontal','Carenagem traseira','Carenagem inferior de proteção','Caixa redutora esquerda','Caixa redutora direita','Coupling esquerdo','Coupling direito','Rodas','Calotas','Pneus']},
-  {grupo:'Elétrica', itens:['Botão On/Off','Conector de carga','LEDs Frontais','LEDs Traseiros']},
-  {grupo:'Eletrônica', itens:['Bateria 1','Bateria 2','Placa RF/Display','Placa de controle de carga','Placa Mãe','Motor Esquerdo','Motor Direito']}
+  {grupo:'Estrutura e Carenagem', itens:['Pé de apoio','Pé de apoio adaptado','Tapete de Silicone','Console Central','Moldura Tapete','Fender Para-lama (metálico)','Para-lama (plástico)','Carenagem frontal','Carenagem traseira','Carenagem inferior de proteção','Caixa redutora esquerda','Caixa redutora direita','Coupling esquerdo','Coupling direito','Rodas','Calotas','Pneus','Mini Extintor']},
+  {grupo:'Elétrica', itens:['Botão On/Off','Conector de carga','LEDs Frontais','LEDs Traseiros','Farol','Estrobo']},
+  {grupo:'Eletrônica', itens:['Bateria 1','Bateria 2','Placa RF/Display','Placa de Carregamento','Placa Display','Placa de Controle','Placa de Energia','Placa de controle de carga','Placa Mãe','Motor Esquerdo','Motor Direito']}
 ];
 
 let checklistTargetIdx=null;
@@ -1445,6 +1483,113 @@ function closeChecklist(){
   checklistTargetIdx=null;
 }
 document.getElementById('modalChecklist').addEventListener('click',function(e){if(e.target===this)closeChecklist();});
+
+function downloadChecklistPDF(){
+  if(checklistTargetIdx===null)return;
+  const v=vehicles[checklistTargetIdx];
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const pw=doc.internal.pageSize.getWidth();
+  let y=15;
+
+  // Cabeçalho
+  doc.setFillColor(14,61,68);
+  doc.rect(0,0,pw,22,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(13);
+  doc.setFont('helvetica','bold');
+  doc.text('BRMOBILITY — Checklist de Vistoria',pw/2,10,{align:'center'});
+  doc.setFontSize(9);
+  doc.setFont('helvetica','normal');
+  doc.text('Departamento Técnico',pw/2,16,{align:'center'});
+  y=28;
+
+  // Info do veículo
+  doc.setTextColor(14,61,68);
+  doc.setFontSize(10);
+  doc.setFont('helvetica','bold');
+  doc.text(`Modelo: ${v.modelo}   Patrimônio: ${v.patrimonio}`,14,y);
+  y+=6;
+  if(v.tecnico) { doc.setFont('helvetica','normal'); doc.text(`Técnico: ${v.tecnico}`,14,y); y+=5; }
+  if(v.checklistData){
+    doc.setFont('helvetica','normal');
+    doc.text(`Data da vistoria: ${new Date(v.checklistData).toLocaleDateString('pt-BR')}`,14,y);
+    y+=5;
+  }
+  if(v.checklistResultado){
+    const cor=v.checklistResultado==='Aprovado'?[5,150,105]:[220,38,38];
+    doc.setTextColor(...cor);
+    doc.setFont('helvetica','bold');
+    doc.text(`Resultado: ${v.checklistResultado}`,14,y);
+    doc.setTextColor(14,61,68);
+    y+=5;
+  }
+  y+=3;
+
+  // Itens do checklist
+  const statusLabel={'OK':'OK','NOK':'NOK','NÃO POSSUI':'N/P'};
+  const statusColor={'OK':[5,150,105],'NOK':[220,38,38],'NÃO POSSUI':[107,114,128]};
+
+  CHECKLIST_GROUPS.forEach(g=>{
+    // Verifica espaço na página
+    if(y>265){ doc.addPage(); y=15; }
+
+    // Título do grupo
+    doc.setFillColor(230,242,243);
+    doc.rect(10,y-4,pw-20,7,'F');
+    doc.setTextColor(14,110,122);
+    doc.setFontSize(9);
+    doc.setFont('helvetica','bold');
+    doc.text(g.grupo.toUpperCase(),14,y);
+    y+=8;
+
+    g.itens.forEach(item=>{
+      if(y>272){ doc.addPage(); y=15; }
+      const val=checklistState[item]||null;
+
+      doc.setTextColor(22,66,74);
+      doc.setFontSize(8.5);
+      doc.setFont('helvetica','normal');
+      doc.text(item,14,y);
+
+      // Badge do status
+      if(val){
+        const cor=statusColor[val]||[107,114,128];
+        doc.setFillColor(...cor);
+        doc.roundedRect(pw-30,y-4,16,5.5,1,1,'F');
+        doc.setTextColor(255,255,255);
+        doc.setFontSize(7);
+        doc.setFont('helvetica','bold');
+        doc.text(statusLabel[val]||val,pw-22,y,{align:'center'});
+        doc.setTextColor(22,66,74);
+      } else {
+        doc.setTextColor(180,180,180);
+        doc.setFontSize(7);
+        doc.text('—',pw-22,y,{align:'center'});
+        doc.setTextColor(22,66,74);
+      }
+
+      // Linha separadora
+      doc.setDrawColor(230,240,243);
+      doc.line(14,y+2,pw-14,y+2);
+      y+=7;
+    });
+    y+=3;
+  });
+
+  // Rodapé
+  doc.setFontSize(7);
+  doc.setTextColor(150,150,150);
+  doc.setFont('helvetica','normal');
+  const pages=doc.internal.getNumberOfPages();
+  for(let p=1;p<=pages;p++){
+    doc.setPage(p);
+    doc.text(`Kanban Virtual BRMobility — Gerado em ${new Date().toLocaleString('pt-BR')} — Pág. ${p}/${pages}`,pw/2,290,{align:'center'});
+  }
+
+  const filename=`vistoria_${v.modelo}_${v.patrimonio}_${new Date().toISOString().slice(0,10)}.pdf`;
+  doc.save(filename);
+}
 
 // ==================== RELATÓRIO ====================
 function buildReportText(){
@@ -1692,12 +1837,15 @@ async function runDashboard(){
     vistoria: allEvents.filter(e=>e.statusNovo==='Em Vistoria'&&inPrev(e.ts)),
   };
 
-  // dados atuais do kanban (snapshot atual)
+  // dados atuais do kanban (snapshot atual - sempre mostrar)
   const emProducao=vehicles.filter(v=>!STATUS_OCULTOS_KANBAN.includes(v.status)&&v.status==='Em Produção').length;
   const aguardando=vehicles.filter(v=>!STATUS_OCULTOS_KANBAN.includes(v.status)&&v.status==='Aguardando Manutenção').length;
-  const totalEvents=Object.values(curr).reduce((a,b)=>a+b.length,0);
+  const totalEmKanban=vehicles.filter(v=>!STATUS_OCULTOS_KANBAN.includes(v.status)).length;
+  const totalEnviados=vehicles.filter(v=>v.status==='Enviado').length;
 
-  if(totalEvents===0&&emProducao===0&&aguardando===0){
+  // Sempre mostra o dashboard (mesmo sem histórico, os dados atuais têm valor)
+  // só esconde se não há NENHUM veículo no sistema
+  if(totalEmKanban===0&&totalEnviados===0&&allEvents.length===0){
     document.getElementById('dashEmpty').style.display='block';
     return;
   }
@@ -1708,14 +1856,15 @@ async function runDashboard(){
     const diff=val-prevVal;
     const el=document.getElementById(deltaId);
     if(!el)return;
-    if(diff>0){ el.textContent='▲ '+diff+' vs período anterior'; el.className='d-delta up'; }
-    else if(diff<0){ el.textContent='▼ '+Math.abs(diff)+' vs período anterior'; el.className='d-delta down'; }
-    else { el.textContent='= igual ao período anterior'; el.className='d-delta same'; }
+    if(diff>0){ el.textContent='▲ '+diff+' vs período ant.'; el.className='d-delta up'; }
+    else if(diff<0){ el.textContent='▼ '+Math.abs(diff)+' vs período ant.'; el.className='d-delta down'; }
+    else { el.textContent='= igual ao período ant.'; el.className='d-delta same'; }
   }
   setCard('dEntradas','dEntradasDelta',curr.entradas.length,prev.entradas.length);
   setCard('dStandBy','dStandByDelta',curr.standBy.length,prev.standBy.length);
   setCard('dEnviados','dEnviadosDelta',curr.enviados.length,prev.enviados.length);
   setCard('dVistoria','dVistoriaDelta',curr.vistoria.length,prev.vistoria.length);
+  // Cartões de snapshot atual (independente do período)
   document.getElementById('dAtivos').textContent=emProducao;
   document.getElementById('dAguardando').textContent=aguardando;
 
