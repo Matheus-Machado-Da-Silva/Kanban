@@ -485,32 +485,32 @@ tr:last-child td{border-bottom:none}
         </div>
       </div>
 
-      <!-- Gráfico de linha: entradas vs finalizados por dia -->
+      <!-- Gráfico de pizza: distribuição por status -->
       <div class="dash-section">
-        <h3>📊 Entradas vs Finalizados por dia</h3>
+        <h3>📊 Distribuição atual por status</h3>
         <div class="dash-canvas-wrap"><canvas id="dashLineChart"></canvas></div>
       </div>
 
       <!-- Ranking de técnicos -->
       <div class="dash-section">
-        <h3>🔧 Ranking de Técnicos (vistorias)</h3>
+        <h3>🔧 Técnicos — Vistorias vinculadas</h3>
         <div id="dashTechRanking"></div>
       </div>
 
       <!-- Modelos mais frequentes -->
       <div class="dash-section">
-        <h3>🏍️ Modelos que mais entraram</h3>
+        <h3>🏍️ Modelos no Kanban (top 6)</h3>
         <div id="dashModelosEntrada"></div>
       </div>
 
       <div class="dash-section">
-        <h3>✅ Modelos mais finalizados (Stand By)</h3>
+        <h3>✅ Modelos em Stand By</h3>
         <div id="dashModelosStandBy"></div>
       </div>
 
-      <!-- Comparativo período anterior -->
+      <!-- Gráfico de barras: top modelos kanban vs enviados -->
       <div class="dash-section">
-        <h3>📅 Comparativo com período anterior</h3>
+        <h3>📅 Top modelos: Kanban vs Enviados</h3>
         <div class="dash-canvas-wrap"><canvas id="dashCompChart"></canvas></div>
       </div>
     </div>
@@ -711,7 +711,9 @@ const AUTHORIZED_VIEWER_EMAILS=[
   'financeiro@brmobility.com.br',
   'expedicao@brmobility.com.br',
   'vanessa@brmobility.com.br',
-  'comercial@brmobility.com.br'
+  'comercial@brmobility.com.br',
+  'ricardo@brmobility.com.br',
+  'sergio@brmobility.com.br',
 ];
 const TECNICO_EMAILS=[
   'maxwel@brmobility.com.br',
@@ -1704,39 +1706,57 @@ function renderComparisonChart(canvasId, existingInstance, eventsLast15, eventsP
 }
 
 async function openCharts(){
-  if(!isAdmin)return; // gráficos são exclusivos do administrador
+  if(!isAdmin)return;
   document.getElementById('modalCharts').classList.add('open');
   document.getElementById('chartsEmptyNotice').style.display='none';
   document.getElementById('chartsContent').style.display='block';
 
   const now=new Date();
   const startLast15=new Date(now.getTime()-15*24*60*60*1000);
+  const startPrev15=new Date(now.getTime()-30*24*60*60*1000);
   const labelsLast15=buildDayLabels(15, now);
 
+  // Tenta buscar histórico real; se falhar, usa dados dos veículos
+  let standByEvents=[], aguardandoEvents=[];
   try{
-    const standByEvents=await fetchHistoryEvents('Stand By');
-    const aguardandoEvents=await fetchHistoryEvents('Aguardando Manutenção');
-
-    const totalEvents=standByEvents.length+aguardandoEvents.length;
-    if(totalEvents===0){
-      document.getElementById('chartsEmptyNotice').style.display='block';
-      document.getElementById('chartsContent').style.display='none';
-      return;
-    }
-
-    const eventsLast15SB=standByEvents.filter(ts=>ts>=startLast15);
-    const eventsPrev15SB=standByEvents.filter(ts=>ts<startLast15);
-    const eventsLast15AG=aguardandoEvents.filter(ts=>ts>=startLast15);
-    const eventsPrev15AG=aguardandoEvents.filter(ts=>ts<startLast15);
-
-    chartInstanceStandBy=renderComparisonChart('chartStandBy', chartInstanceStandBy, eventsLast15SB, eventsPrev15SB, labelsLast15, '#39ff6a');
-    chartInstanceAguardando=renderComparisonChart('chartAguardando', chartInstanceAguardando, eventsLast15AG, eventsPrev15AG, labelsLast15, '#c084fc');
+    standByEvents=await fetchHistoryEvents('Stand By');
+    aguardandoEvents=await fetchHistoryEvents('Aguardando Manutenção');
   }catch(e){
-    console.error('Erro ao carregar histórico para gráficos', e);
-    document.getElementById('chartsEmptyNotice').style.display='block';
-    document.getElementById('chartsEmptyNotice').textContent='⚠️ Não foi possível carregar o histórico agora. Verifique sua conexão e tente novamente.';
-    document.getElementById('chartsContent').style.display='none';
+    console.warn('Histórico indisponível para gráficos, usando dados dos veículos.',e.message||e);
   }
+
+  // Fallback: usa checklistData dos veículos em Stand By como proxy de "quando finalizou"
+  if(standByEvents.length===0){
+    vehicles.filter(v=>v.status==='Stand By'&&v.checklistData).forEach(v=>{
+      standByEvents.push(new Date(v.checklistData));
+    });
+    // veículos enviados com dataSaida também representam finalizações
+    vehicles.filter(v=>v.status==='Enviado'&&v.dataSaida).forEach(v=>{
+      standByEvents.push(new Date(v.dataSaida));
+    });
+  }
+  if(aguardandoEvents.length===0){
+    vehicles.filter(v=>v.dataEntrada).forEach(v=>{
+      aguardandoEvents.push(new Date(v.dataEntrada));
+    });
+  }
+
+  const totalEvents=standByEvents.length+aguardandoEvents.length;
+  if(totalEvents===0){
+    document.getElementById('chartsEmptyNotice').style.display='block';
+    document.getElementById('chartsEmptyNotice').textContent=
+      '⚠️ Ainda não há dados suficientes para gerar o gráfico. Continue usando o sistema e os dados aparecerão aqui.';
+    document.getElementById('chartsContent').style.display='none';
+    return;
+  }
+
+  const eventsLast15SB=standByEvents.filter(ts=>ts>=startLast15);
+  const eventsPrev15SB=standByEvents.filter(ts=>ts>=startPrev15&&ts<startLast15);
+  const eventsLast15AG=aguardandoEvents.filter(ts=>ts>=startLast15);
+  const eventsPrev15AG=aguardandoEvents.filter(ts=>ts>=startPrev15&&ts<startLast15);
+
+  chartInstanceStandBy=renderComparisonChart('chartStandBy', chartInstanceStandBy, eventsLast15SB, eventsPrev15SB, labelsLast15, '#0e6e7a');
+  chartInstanceAguardando=renderComparisonChart('chartAguardando', chartInstanceAguardando, eventsLast15AG, eventsPrev15AG, labelsLast15, '#f59e0b');
 }
 
 function closeCharts(){ document.getElementById('modalCharts').classList.remove('open'); }
@@ -1764,143 +1784,121 @@ function closeDashboard(){
 document.getElementById('modalDashboard').addEventListener('click',function(e){if(e.target===this)closeDashboard();});
 
 async function runDashboard(){
-  if(!fbReady)return;
-  const fromStr=document.getElementById('dashFrom').value;
-  const toStr=document.getElementById('dashTo').value;
-  if(!fromStr||!toStr){alert('Selecione as duas datas.');return;}
-
-  const from=new Date(fromStr+'T00:00:00');
-  const to=new Date(toStr+'T23:59:59');
-  const diffMs=to-from;
-  const prevTo=new Date(from.getTime()-1);
-  const prevFrom=new Date(prevTo.getTime()-diffMs);
+  if(!vehicles.length){alert('Aguarde os dados carregarem.');return;}
 
   document.getElementById('dashContent').style.display='none';
   document.getElementById('dashEmpty').style.display='none';
-  document.getElementById('dashPeriodLabel').textContent=
-    'Período: '+from.toLocaleDateString('pt-BR')+' até '+to.toLocaleDateString('pt-BR');
 
-  // busca histórico de eventos registrados
-  const {historyCol,getDocs}=window.__fb;
-  let allEvents=[];
-  try{
-    const snap=await getDocs(historyCol);
-    snap.forEach(d=>{
-      const data=d.data();
-      if(data.timestamp){
-        const ts=data.timestamp.toDate?data.timestamp.toDate():new Date(data.timestamp);
-        allEvents.push({...data, ts});
-      }
-    });
-  }catch(e){console.error('Erro ao buscar histórico',e);}
+  // ── SNAPSHOT ATUAL ────────────────────────────────────────────────────
+  const kanban = vehicles.filter(v=>!STATUS_OCULTOS_KANBAN.includes(v.status));
+  const enviados = vehicles.filter(v=>v.status==='Enviado');
 
-  // COMPLEMENTO: usa dataEntrada e dataSaida dos próprios veículos como fonte adicional
-  // para cobrir o período antes do histórico começar a ser registrado
-  vehicles.forEach(v=>{
-    if(v.dataEntrada){
-      const ts=new Date(v.dataEntrada);
-      const jaExiste=allEvents.some(e=>e.modelo===v.modelo&&e.patrimonio===v.patrimonio&&e.statusNovo==='Aguardando Manutenção'&&Math.abs(e.ts-ts)<60000);
-      if(!jaExiste) allEvents.push({modelo:v.modelo,patrimonio:v.patrimonio,statusNovo:'Aguardando Manutenção',tecnico:v.tecnico||null,ts});
-    }
-    if(v.dataSaida&&v.status==='Enviado'){
-      const ts=new Date(v.dataSaida);
-      const jaExiste=allEvents.some(e=>e.modelo===v.modelo&&e.patrimonio===v.patrimonio&&e.statusNovo==='Enviado'&&Math.abs(e.ts-ts)<60000);
-      if(!jaExiste) allEvents.push({modelo:v.modelo,patrimonio:v.patrimonio,statusNovo:'Enviado',tecnico:v.tecnico||null,destino:v.destino||null,ts});
-    }
-    // veículos em Stand By que têm checklist = finalizados
-    if(v.status==='Stand By'&&v.checklistData){
-      const ts=new Date(v.checklistData);
-      const jaExiste=allEvents.some(e=>e.modelo===v.modelo&&e.patrimonio===v.patrimonio&&e.statusNovo==='Stand By'&&Math.abs(e.ts-ts)<60000);
-      if(!jaExiste) allEvents.push({modelo:v.modelo,patrimonio:v.patrimonio,statusNovo:'Stand By',tecnico:v.tecnico||null,ts});
-    }
-    if(v.status==='Em Vistoria'&&v.tecnico){
-      const ts=v.checklistData?new Date(v.checklistData):new Date(v.dataEntrada||Date.now());
-      const jaExiste=allEvents.some(e=>e.modelo===v.modelo&&e.patrimonio===v.patrimonio&&e.statusNovo==='Em Vistoria');
-      if(!jaExiste) allEvents.push({modelo:v.modelo,patrimonio:v.patrimonio,statusNovo:'Em Vistoria',tecnico:v.tecnico,ts});
-    }
-  });
+  // Contagens por status
+  const byStatus={};
+  kanban.forEach(v=>{ byStatus[v.status]=(byStatus[v.status]||0)+1; });
 
-  // filtra por período atual e anterior
-  const inPeriod=(ts)=>ts>=from&&ts<=to;
-  const inPrev=(ts)=>ts>=prevFrom&&ts<=prevTo;
+  // Contagens por modelo
+  const modelCount={};
+  kanban.forEach(v=>{ modelCount[v.modelo]=(modelCount[v.modelo]||0)+1; });
 
-  const curr={
-    entradas: allEvents.filter(e=>e.statusNovo==='Aguardando Manutenção'&&inPeriod(e.ts)),
-    standBy:  allEvents.filter(e=>e.statusNovo==='Stand By'&&inPeriod(e.ts)),
-    enviados: allEvents.filter(e=>e.statusNovo==='Enviado'&&inPeriod(e.ts)),
-    vistoria: allEvents.filter(e=>e.statusNovo==='Em Vistoria'&&inPeriod(e.ts)),
-  };
-  const prev={
-    entradas: allEvents.filter(e=>e.statusNovo==='Aguardando Manutenção'&&inPrev(e.ts)),
-    standBy:  allEvents.filter(e=>e.statusNovo==='Stand By'&&inPrev(e.ts)),
-    enviados: allEvents.filter(e=>e.statusNovo==='Enviado'&&inPrev(e.ts)),
-    vistoria: allEvents.filter(e=>e.statusNovo==='Em Vistoria'&&inPrev(e.ts)),
-  };
-
-  // dados atuais do kanban (snapshot atual - sempre mostrar)
-  const emProducao=vehicles.filter(v=>!STATUS_OCULTOS_KANBAN.includes(v.status)&&v.status==='Em Produção').length;
-  const aguardando=vehicles.filter(v=>!STATUS_OCULTOS_KANBAN.includes(v.status)&&v.status==='Aguardando Manutenção').length;
-  const totalEmKanban=vehicles.filter(v=>!STATUS_OCULTOS_KANBAN.includes(v.status)).length;
-  const totalEnviados=vehicles.filter(v=>v.status==='Enviado').length;
-
-  // Sempre mostra o dashboard (mesmo sem histórico, os dados atuais têm valor)
-  // só esconde se não há NENHUM veículo no sistema
-  if(totalEmKanban===0&&totalEnviados===0&&allEvents.length===0){
-    document.getElementById('dashEmpty').style.display='block';
-    return;
-  }
-
-  // ---- cartões ----
-  function setCard(id, deltaId, val, prevVal){
-    document.getElementById(id).textContent=val;
-    const diff=val-prevVal;
-    const el=document.getElementById(deltaId);
-    if(!el)return;
-    if(diff>0){ el.textContent='▲ '+diff+' vs período ant.'; el.className='d-delta up'; }
-    else if(diff<0){ el.textContent='▼ '+Math.abs(diff)+' vs período ant.'; el.className='d-delta down'; }
-    else { el.textContent='= igual ao período ant.'; el.className='d-delta same'; }
-  }
-  setCard('dEntradas','dEntradasDelta',curr.entradas.length,prev.entradas.length);
-  setCard('dStandBy','dStandByDelta',curr.standBy.length,prev.standBy.length);
-  setCard('dEnviados','dEnviadosDelta',curr.enviados.length,prev.enviados.length);
-  setCard('dVistoria','dVistoriaDelta',curr.vistoria.length,prev.vistoria.length);
-  // Cartões de snapshot atual (independente do período)
-  document.getElementById('dAtivos').textContent=emProducao;
-  document.getElementById('dAguardando').textContent=aguardando;
-
-  // ---- gráfico de linha diário ----
-  const days=[];
-  for(let d=new Date(from);d<=to;d.setDate(d.getDate()+1)){
-    days.push(new Date(d).toISOString().slice(0,10));
-  }
-  const countByDay=(events)=>{
-    const map={};
-    days.forEach(d=>map[d]=0);
-    events.forEach(e=>{ const k=e.ts.toISOString().slice(0,10); if(k in map)map[k]++; });
-    return days.map(d=>map[d]);
-  };
-  const ctx1=document.getElementById('dashLineChart').getContext('2d');
-  if(dashLineChartInst)dashLineChartInst.destroy();
-  dashLineChartInst=new Chart(ctx1,{
-    type:'line',
-    data:{
-      labels:days.map(d=>d.slice(5)),
-      datasets:[
-        {label:'Entradas',data:countByDay(curr.entradas),borderColor:'#0e6e7a',backgroundColor:'#0e6e7a22',tension:.3,fill:true},
-        {label:'Finalizados',data:countByDay(curr.standBy),borderColor:'#059669',backgroundColor:'#05966922',tension:.3,fill:true},
-        {label:'Enviados',data:countByDay(curr.enviados),borderColor:'#f59e0b',backgroundColor:'#f59e0b22',tension:.3,fill:true},
-      ]
-    },
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#16424a',font:{size:11}}}},
-      scales:{x:{ticks:{color:'#3f8c97',font:{size:9}},grid:{color:'#0e6e7a11'}},
-              y:{ticks:{color:'#3f8c97',font:{size:10},stepSize:1},grid:{color:'#0e6e7a11'},beginAtZero:true}}}
-  });
-
-  // ---- ranking técnicos ----
+  // Técnicos: conta vistorias realizadas (veículos com tecnico preenchido)
   const techCount={};
-  curr.vistoria.forEach(e=>{
-    if(e.tecnico){ techCount[e.tecnico]=(techCount[e.tecnico]||0)+1; }
+  vehicles.filter(v=>v.tecnico).forEach(v=>{
+    techCount[v.tecnico]=(techCount[v.tecnico]||0)+1;
   });
+
+  // Modelos mais enviados
+  const modelEnviadoCount={};
+  enviados.forEach(v=>{ modelEnviadoCount[v.modelo]=(modelEnviadoCount[v.modelo]||0)+1; });
+
+  // Stand By com checklist
+  const standByComVistoria=vehicles.filter(v=>v.status==='Stand By'&&v.checklist);
+  const standByTotal=vehicles.filter(v=>v.status==='Stand By');
+
+  // ── TENTATIVA DE HISTÓRICO (opcional, não bloqueia o dashboard) ────────
+  let histEvents=[];
+  try{
+    if(window.__fb && window.__fb.historyCol && window.__fb.getDocs){
+      const {historyCol,getDocs}=window.__fb;
+      const snap=await Promise.race([
+        getDocs(historyCol),
+        new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),5000))
+      ]);
+      snap.forEach(d=>{
+        const data=d.data();
+        if(data.timestamp){
+          const ts=data.timestamp.toDate?data.timestamp.toDate():new Date(data.timestamp);
+          histEvents.push({...data,ts});
+        }
+      });
+    }
+  }catch(e){
+    console.warn('Histórico indisponível — dashboard mostrará snapshot atual.',e.message||e);
+    // não bloqueia — continua com dados dos veículos
+  }
+
+  // Período selecionado (para filtrar histórico se existir)
+  const fromStr=document.getElementById('dashFrom').value;
+  const toStr=document.getElementById('dashTo').value;
+  const from=fromStr?new Date(fromStr+'T00:00:00'):null;
+  const to=toStr?new Date(toStr+'T23:59:59'):null;
+  const inPeriod=(ts)=>(!from||ts>=from)&&(!to||ts<=to);
+
+  const histPeriod=histEvents.filter(e=>inPeriod(e.ts));
+  const hasHist=histPeriod.length>0;
+
+  if(from&&to){
+    document.getElementById('dashPeriodLabel').textContent=
+      'Período: '+from.toLocaleDateString('pt-BR')+' até '+to.toLocaleDateString('pt-BR')+
+      (hasHist?' (com histórico de eventos)':' (dados do snapshot atual)');
+  }
+
+  // ── CARTÕES ───────────────────────────────────────────────────────────
+  function setCard(id,deltaId,val,note){
+    document.getElementById(id).textContent=val;
+    const el=document.getElementById(deltaId);
+    if(el){ el.textContent=note||''; el.className='d-delta same'; }
+  }
+
+  if(hasHist){
+    const diffMs=(to&&from)?to-from:30*24*60*60*1000;
+    const prevTo=from?new Date(from.getTime()-1):new Date();
+    const prevFrom=new Date(prevTo.getTime()-diffMs);
+    const inPrev=(ts)=>ts>=prevFrom&&ts<=prevTo;
+    const histPrev=histEvents.filter(e=>inPrev(e.ts));
+
+    function setCardDelta(id,deltaId,curr,prevVal){
+      document.getElementById(id).textContent=curr;
+      const diff=curr-prevVal;
+      const el=document.getElementById(deltaId);
+      if(!el)return;
+      if(diff>0){el.textContent='▲ '+diff+' vs ant.';el.className='d-delta up';}
+      else if(diff<0){el.textContent='▼ '+Math.abs(diff)+' vs ant.';el.className='d-delta down';}
+      else{el.textContent='= igual ao ant.';el.className='d-delta same';}
+    }
+    setCardDelta('dEntradas','dEntradasDelta',
+      histPeriod.filter(e=>e.statusNovo==='Aguardando Manutenção').length,
+      histPrev.filter(e=>e.statusNovo==='Aguardando Manutenção').length);
+    setCardDelta('dStandBy','dStandByDelta',
+      histPeriod.filter(e=>e.statusNovo==='Stand By').length,
+      histPrev.filter(e=>e.statusNovo==='Stand By').length);
+    setCardDelta('dEnviados','dEnviadosDelta',
+      histPeriod.filter(e=>e.statusNovo==='Enviado').length,
+      histPrev.filter(e=>e.statusNovo==='Enviado').length);
+    setCardDelta('dVistoria','dVistoriaDelta',
+      histPeriod.filter(e=>e.statusNovo==='Em Vistoria').length,
+      histPrev.filter(e=>e.statusNovo==='Em Vistoria').length);
+  } else {
+    // Sem histórico: usa snapshot atual
+    setCard('dEntradas','dEntradasDelta', byStatus['Aguardando Manutenção']||0, 'snapshot atual');
+    setCard('dStandBy','dStandByDelta', standByTotal.length, 'snapshot atual');
+    setCard('dEnviados','dEnviadosDelta', enviados.length, 'total enviados');
+    setCard('dVistoria','dVistoriaDelta', standByComVistoria.length, 'com checklist');
+  }
+  document.getElementById('dAtivos').textContent=byStatus['Em Produção']||0;
+  document.getElementById('dAguardando').textContent=byStatus['Aguardando Manutenção']||0;
+
+  // ── RANKING TÉCNICOS ─────────────────────────────────────────────────
   const techSorted=Object.entries(techCount).sort((a,b)=>b[1]-a[1]);
   const maxTech=techSorted[0]?techSorted[0][1]:1;
   document.getElementById('dashTechRanking').innerHTML=techSorted.length?
@@ -1909,50 +1907,79 @@ async function runDashboard(){
         <div class="dash-bar-label" title="${nome}">${nome}</div>
         <div class="dash-bar-track"><div class="dash-bar-fill" style="width:${Math.round(n/maxTech*100)}%"></div></div>
         <div class="dash-bar-val">${n}</div>
-      </div>`).join('') :
-    '<div class="dash-empty">Nenhuma vistoria registrada no período.</div>';
+      </div>`).join(''):
+    '<div class="dash-empty">Nenhum técnico vinculado ainda.</div>';
 
-  // ---- modelos mais frequentes: entradas ----
-  function topModelos(events, containerId){
-    const mc={};
-    events.forEach(e=>{ if(e.modelo)mc[e.modelo]=(mc[e.modelo]||0)+1; });
-    const sorted=Object.entries(mc).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  // ── MODELOS MAIS FREQUENTES (kanban atual) ────────────────────────────
+  function renderBar(data, containerId, color){
+    const sorted=Object.entries(data).sort((a,b)=>b[1]-a[1]).slice(0,6);
     const max=sorted[0]?sorted[0][1]:1;
     document.getElementById(containerId).innerHTML=sorted.length?
       sorted.map(([m,n])=>`
         <div class="dash-bar-row">
           <div class="dash-bar-label">${m}</div>
-          <div class="dash-bar-track"><div class="dash-bar-fill" style="width:${Math.round(n/max*100)}%;background:#3f8c97"></div></div>
+          <div class="dash-bar-track"><div class="dash-bar-fill" style="width:${Math.round(n/max*100)}%;background:${color}"></div></div>
           <div class="dash-bar-val">${n}</div>
-        </div>`).join('') :
+        </div>`).join(''):
       '<div class="dash-empty">Nenhum dado.</div>';
   }
-  topModelos(curr.entradas,'dashModelosEntrada');
-  topModelos(curr.standBy,'dashModelosStandBy');
+  renderBar(modelCount,'dashModelosEntrada','#3f8c97');
 
-  // ---- comparativo período anterior (barras lado a lado) ----
-  const cats=['Entradas','Finalizados','Enviados','Vistorias'];
-  const currVals=[curr.entradas.length,curr.standBy.length,curr.enviados.length,curr.vistoria.length];
-  const prevVals=[prev.entradas.length,prev.standBy.length,prev.enviados.length,prev.vistoria.length];
+  // Modelos em Stand By
+  const sbModelCount={};
+  standByTotal.forEach(v=>{ sbModelCount[v.modelo]=(sbModelCount[v.modelo]||0)+1; });
+  renderBar(sbModelCount,'dashModelosStandBy','#059669');
+
+  // ── GRÁFICO DE PIZZA: distribuição por status ─────────────────────────
+  const ctx1=document.getElementById('dashLineChart').getContext('2d');
+  if(dashLineChartInst)dashLineChartInst.destroy();
+
+  const statusLabels=Object.keys(byStatus).filter(s=>byStatus[s]>0);
+  const statusValues=statusLabels.map(s=>byStatus[s]);
+  const colors=['#0e6e7a','#f59e0b','#f87171','#4ade80','#c084fc','#60a5fa','#facc15','#86efac','#94a3b8'];
+
+  dashLineChartInst=new Chart(ctx1,{
+    type:'doughnut',
+    data:{
+      labels:statusLabels,
+      datasets:[{data:statusValues,backgroundColor:colors.slice(0,statusLabels.length),borderWidth:2,borderColor:'#f3f3f3'}]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{position:'right',labels:{color:'#16424a',font:{size:10},boxWidth:12}},
+        title:{display:true,text:'Distribuição atual por status',color:'#16424a',font:{size:12}}
+      }
+    }
+  });
+
+  // ── GRÁFICO COMPARATIVO: modelos mais frequentes ──────────────────────
   const ctx2=document.getElementById('dashCompChart').getContext('2d');
   if(dashCompChartInst)dashCompChartInst.destroy();
+
+  const topModels=Object.entries(modelCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
   dashCompChartInst=new Chart(ctx2,{
     type:'bar',
     data:{
-      labels:cats,
+      labels:topModels.map(([m])=>m),
       datasets:[
-        {label:'Período atual',data:currVals,backgroundColor:'#0e6e7a',borderRadius:6},
-        {label:'Período anterior',data:prevVals,backgroundColor:'#3f8c9777',borderRadius:6},
+        {label:'No Kanban',data:topModels.map(([m,n])=>n),backgroundColor:'#0e6e7a',borderRadius:5},
+        {label:'Enviados',data:topModels.map(([m])=>modelEnviadoCount[m]||0),backgroundColor:'#f59e0b',borderRadius:5},
       ]
     },
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{labels:{color:'#16424a',font:{size:11}}}},
-      scales:{x:{ticks:{color:'#3f8c97',font:{size:11}},grid:{display:false}},
-              y:{ticks:{color:'#3f8c97',stepSize:1},grid:{color:'#0e6e7a11'},beginAtZero:true}}}
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#16424a',font:{size:10}}}},
+      scales:{
+        x:{ticks:{color:'#3f8c97',font:{size:10}},grid:{display:false}},
+        y:{ticks:{color:'#3f8c97',stepSize:1},grid:{color:'#0e6e7a11'},beginAtZero:true}
+      }
+    }
   });
 
   document.getElementById('dashContent').style.display='block';
 }
+
 
 function copyMsg(){
   const txt=document.getElementById('wpMsg').textContent;
