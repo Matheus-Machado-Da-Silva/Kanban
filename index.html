@@ -67,7 +67,55 @@ body{background:#f3f3f3;font-family:'Segoe UI',Arial,sans-serif;color:#16424a;mi
 .btn-add:active{background:#0a5860}
 .btn-wp{background:#fff;color:#25d366;border:1.5px solid #25d366}
 .btn-chart{background:#fff;color:#c084fc;border:1.5px solid #c084fc}
-.btn-dashboard{background:#fff;color:#f59e0b;border:1.5px solid #f59e0b}
+.btn-dashboard{background:#fff;color:#f59e0b;border:1.5px solid #f59e0b;height:44px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;flex:1;min-width:130px;padding:0 8px;-webkit-appearance:none}
+.btn-lab{background:#fff;color:#7c3aed;border:1.5px solid #7c3aed;height:44px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;flex:1;min-width:130px;padding:0 8px;-webkit-appearance:none}
+.btn-lab:active{background:#f5f3ff}
+
+/* LABORATÓRIO */
+.lab-page{background:#fff;border:1.5px solid #7c3aed33;border-radius:12px;padding:1.2rem 1rem;margin-top:1.5rem}
+.lab-page h2{font-size:15px;font-weight:700;color:#7c3aed;margin-bottom:1rem;display:flex;align-items:center;gap:8px}
+.lab-new-btns{display:flex;gap:8px;margin-bottom:1.2rem;flex-wrap:wrap}
+.btn-lab-new{background:#7c3aed;color:#fff;border:none;border-radius:8px;padding:0 16px;height:42px;font-size:13px;font-weight:700;cursor:pointer;flex:1;min-width:140px;-webkit-appearance:none}
+.btn-lab-new:active{background:#6d28d9}
+.lab-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+.lab-card{background:#faf5ff;border:1.5px solid #7c3aed22;border-radius:10px;padding:.9rem;cursor:pointer;transition:border-color .15s}
+.lab-card:hover{border-color:#7c3aed88}
+.lab-card-type{font-size:10px;font-weight:700;color:#7c3aed;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.lab-card-title{font-size:14px;font-weight:700;color:#16424a;margin-bottom:3px}
+.lab-card-meta{font-size:11px;color:#7fa8af}
+.lab-card-actions{display:flex;gap:6px;margin-top:8px}
+.btn-lab-card{border:none;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;-webkit-appearance:none}
+.btn-lab-edit{background:#7c3aed;color:#fff}
+.btn-lab-pdf{background:#f59e0b;color:#fff}
+.btn-lab-del{background:#fee2e2;color:#dc2626}
+
+/* FICHAS */
+.ficha-wrap{background:#fff;border-radius:12px;padding:1.2rem;max-width:700px;margin:0 auto}
+.ficha-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1rem;padding-bottom:.8rem;border-bottom:2px solid #16424a}
+.ficha-title-block h3{font-size:13px;font-weight:700;color:#16424a;margin-bottom:2px}
+.ficha-title-block p{font-size:10px;color:#7fa8af}
+.ficha-logo{font-size:11px;font-weight:700;color:#0e6e7a;text-align:right}
+.ficha-section-title{background:#0e3d44;color:#fff;font-size:11px;font-weight:700;text-align:center;padding:5px;margin:10px 0 6px;border-radius:4px;text-transform:uppercase;letter-spacing:.5px}
+.ficha-row{display:flex;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+.ficha-field{flex:1;min-width:120px}
+.ficha-field label{font-size:10px;font-weight:700;color:#16424a;display:block;margin-bottom:2px}
+.ficha-field input,.ficha-field textarea,.ficha-field select{width:100%;border:1px solid #0e6e7a44;border-radius:5px;padding:5px 8px;font-size:12px;color:#16424a;background:#fff;-webkit-appearance:none;outline:none;font-family:inherit}
+.ficha-field textarea{resize:vertical;min-height:60px}
+.ficha-insp-table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:8px}
+.ficha-insp-table th{background:#e6f2f3;color:#16424a;padding:5px 8px;text-align:left;border:1px solid #0e6e7a22;font-weight:700}
+.ficha-insp-table td{padding:5px 8px;border:1px solid #0e6e7a22;vertical-align:middle}
+.ficha-insp-table td input[type=checkbox]{width:18px;height:18px;cursor:pointer;accent-color:#0e6e7a}
+.ficha-approval{display:flex;gap:10px;align-items:center;padding:8px;background:#f8fafc;border-radius:8px;border:1px solid #0e6e7a22;margin-top:8px}
+.ficha-approval label{font-size:12px;font-weight:700;color:#16424a}
+.ficha-approval-btns{display:flex;gap:8px}
+.ficha-aprov-sim,.ficha-aprov-nao{border:1px solid #ccc;background:#fff;border-radius:6px;padding:4px 14px;font-size:12px;font-weight:700;cursor:pointer;-webkit-appearance:none}
+.ficha-aprov-sim.sel{background:#d1fae5;border-color:#059669;color:#059669}
+.ficha-aprov-nao.sel{background:#fee2e2;border-color:#dc2626;color:#dc2626}
+.ficha-obs{width:100%;border:1px solid #0e6e7a44;border-radius:5px;padding:6px 8px;font-size:12px;color:#16424a;resize:vertical;min-height:50px;font-family:inherit}
+.ficha-btns{display:flex;gap:8px;margin-top:1rem;flex-wrap:wrap}
+.btn-ficha-save{background:#0e6e7a;color:#fff;border:none;border-radius:8px;flex:1;height:44px;font-size:14px;font-weight:700;cursor:pointer;-webkit-appearance:none}
+.btn-ficha-pdf{background:#f59e0b;color:#fff;border:none;border-radius:8px;flex:1;height:44px;font-size:14px;font-weight:700;cursor:pointer;-webkit-appearance:none}
+.btn-ficha-cancel{background:none;border:1px solid #ccc;color:#7fa8af;border-radius:8px;flex:1;height:44px;font-size:14px;cursor:pointer;-webkit-appearance:none}
 .count-info{font-size:11px;color:#7fa8af;margin-bottom:6px}
 .table-wrap{background:#fff;border:1.5px solid #1a9aa833;border-radius:10px;overflow:hidden;overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
 table{width:100%;border-collapse:collapse;font-size:12px;min-width:290px}
@@ -226,6 +274,7 @@ tr:last-child td{border-bottom:none}
     <button class="btn-wp" onclick="openWP()">📋 Relatório WhatsApp</button>
     <button class="btn-chart" onclick="openCharts()">📊 Gráficos (15 dias)</button>
     <button class="btn-dashboard" onclick="openDashboard()">📈 Dashboard</button>
+    <button class="btn-lab" onclick="toggleLab()">🔬 Laboratório</button>
   </div>
   <div class="controls" id="viewOnlyControls">
     <span class="view-only-tag" style="align-self:center;flex:1">👁️ Modo visualização — você está vendo o Kanban como visitante autorizado</span>
@@ -432,6 +481,27 @@ tr:last-child td{border-bottom:none}
       <tbody id="tbodyEnviados"></tbody>
     </table>
     <div class="empty" id="emptyEnviados" style="display:none">Nenhum veículo enviado ainda.</div>
+  </div>
+</div>
+
+<!-- PÁGINA LABORATÓRIO -->
+<div id="labPage" style="display:none" class="wrap">
+  <div class="lab-page">
+    <h2>🔬 Laboratório — Fichas de Acompanhamento</h2>
+    <div class="lab-new-btns">
+      <button class="btn-lab-new" onclick="openFicha('bateria',null)">🔋 Nova Ficha de Bateria</button>
+      <button class="btn-lab-new" onclick="openFicha('carregador',null)">⚡ Nova Ficha de Carregador</button>
+    </div>
+    <div class="lab-list" id="labList">
+      <div style="color:#7fa8af;font-size:13px;padding:1rem">Carregando fichas...</div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL FICHA BATERIA / CARREGADOR -->
+<div class="modal-bg" id="modalFicha">
+  <div class="modal" style="max-width:680px;max-height:92vh">
+    <div id="fichaContent"></div>
   </div>
 </div>
 
@@ -696,6 +766,10 @@ let isViewer=false;     // true para e-mails @brmobility.com.br autorizados (só
 let isExpedicao=false;  // true para expedicao@brmobility.com.br (leitura + converter Stand By → Enviado)
 let isTecnico=false;    // true para técnicos (maxwel, aran, brandon): avançar status passo a passo
 let currentUserEmail=null;
+// Laboratório
+let labVisible=false;
+let currentFichaId=null;
+let currentFichaTipo=null;
 
 const ADMIN_EMAIL='matheussmmachado@outlook.com';
 const EXPEDICAO_EMAIL='expedicao@brmobility.com.br';
@@ -711,9 +785,7 @@ const AUTHORIZED_VIEWER_EMAILS=[
   'financeiro@brmobility.com.br',
   'expedicao@brmobility.com.br',
   'vanessa@brmobility.com.br',
-  'comercial@brmobility.com.br',
-  'ricardo@brmobility.com.br',
-  'sergio@brmobility.com.br',
+  'comercial@brmobility.com.br'
 ];
 const TECNICO_EMAILS=[
   'maxwel@brmobility.com.br',
@@ -746,6 +818,8 @@ function setPermissionUI(){
   document.getElementById('editControls').style.display=isAdmin?'flex':'none';
   document.getElementById('viewOnlyControls').style.display=(isLoggedIn&&!isAdmin)?'flex':'none';
   document.getElementById('thAcoes').style.display=isAdmin?'':'none';
+  // esconde laboratório se não for admin
+  if(!isAdmin){ labVisible=false; const lp=document.getElementById('labPage'); if(lp) lp.style.display='none'; }
 
   const loginArea=document.getElementById('loginArea');
   const btnOpenLogin=document.getElementById('btnOpenLogin');
@@ -1757,6 +1831,531 @@ async function openCharts(){
 
   chartInstanceStandBy=renderComparisonChart('chartStandBy', chartInstanceStandBy, eventsLast15SB, eventsPrev15SB, labelsLast15, '#0e6e7a');
   chartInstanceAguardando=renderComparisonChart('chartAguardando', chartInstanceAguardando, eventsLast15AG, eventsPrev15AG, labelsLast15, '#f59e0b');
+}
+
+// ==================== LABORATÓRIO ====================
+
+function toggleLab(){
+  if(!isAdmin)return;
+  labVisible=!labVisible;
+  document.getElementById('labPage').style.display=labVisible?'block':'none';
+  if(labVisible) loadLabList();
+}
+
+async function loadLabList(){
+  if(!fbReady)return;
+  const listEl=document.getElementById('labList');
+  listEl.innerHTML='<div style="color:#7fa8af;font-size:13px;padding:1rem">Carregando...</div>';
+  try{
+    const {db,collection,getDocs,query,orderBy}=window.__fb;
+    // getDocs sem orderBy para evitar necessidade de índice
+    const snap=await window.__fb.getDocs(window.__fb.collection(window.__fb.db,'laboratorio'));
+    const docs=[];
+    snap.forEach(d=>docs.push({id:d.id,...d.data()}));
+    docs.sort((a,b)=>(b.criadoEm||'').localeCompare(a.criadoEm||''));
+    if(docs.length===0){
+      listEl.innerHTML='<div style="color:#7fa8af;font-size:13px;padding:1rem">Nenhuma ficha cadastrada ainda.</div>';
+      return;
+    }
+    listEl.innerHTML=docs.map(d=>`
+      <div class="lab-card">
+        <div class="lab-card-type">${d.tipo==='bateria'?'🔋 Bateria':'⚡ Carregador'}</div>
+        <div class="lab-card-title">Patrimônio: ${d.patrimonio||'—'}</div>
+        <div class="lab-card-meta">${d.modelo||''} ${d.criadoEm?'· '+new Date(d.criadoEm).toLocaleDateString('pt-BR'):''}</div>
+        <div class="lab-card-actions">
+          <button class="btn-lab-card btn-lab-edit" onclick="openFicha('${d.tipo}','${d.id}')">✏️ Editar</button>
+          <button class="btn-lab-card btn-lab-pdf" onclick="gerarFichaPDF('${d.id}')">⬇️ PDF</button>
+          <button class="btn-lab-card btn-lab-del" onclick="delFicha('${d.id}')">✕</button>
+        </div>
+      </div>`).join('');
+  }catch(e){
+    console.error('Erro ao carregar laboratório',e);
+    listEl.innerHTML='<div style="color:#dc2626;font-size:13px;padding:1rem">Erro ao carregar fichas. Verifique as permissões do Firestore.</div>';
+  }
+}
+
+async function openFicha(tipo, id){
+  currentFichaTipo=tipo;
+  currentFichaId=id;
+  let data={};
+  if(id){
+    try{
+      // busca a ficha pelo id varrendo a coleção
+      const allSnap=await window.__fb.getDocs(window.__fb.collection(window.__fb.db,'laboratorio'));
+      allSnap.forEach(d=>{ if(d.id===id) data={...d.data()}; });
+    }catch(e){ console.error('Erro ao carregar ficha:',e); }
+  }
+  document.getElementById('fichaContent').innerHTML=
+    tipo==='bateria'?buildFichaBateria(data):buildFichaCarregador(data);
+  document.getElementById('modalFicha').classList.add('open');
+}
+
+function closeFicha(){
+  document.getElementById('modalFicha').classList.remove('open');
+  currentFichaId=null; currentFichaTipo=null;
+}
+document.getElementById('modalFicha').addEventListener('click',function(e){if(e.target===this)closeFicha();});
+
+function fv(id){ const el=document.getElementById(id); return el?el.value:''; }
+function fc(id){ const el=document.getElementById(id); return el?el.checked:false; }
+function sv(id,val){ const el=document.getElementById(id); if(el) el.value=val||''; }
+function sc(id,val){ const el=document.getElementById(id); if(el) el.checked=!!val; }
+
+function getAprov(prefix){
+  const sim=document.querySelector('.'+prefix+'-sim');
+  const nao=document.querySelector('.'+prefix+'-nao');
+  if(sim&&sim.classList.contains('sel')) return 'SIM';
+  if(nao&&nao.classList.contains('sel')) return 'NÃO';
+  return '';
+}
+function setAprov(prefix,val){
+  const sim=document.querySelector('.'+prefix+'-sim');
+  const nao=document.querySelector('.'+prefix+'-nao');
+  if(sim) sim.classList.toggle('sel', val==='SIM');
+  if(nao) nao.classList.toggle('sel', val==='NÃO');
+}
+function toggleAprov(prefix,val){
+  setAprov(prefix, getAprov(prefix)===val?'':val);
+}
+
+function collectFichaData(){
+  if(currentFichaTipo==='bateria'){
+    return {
+      tipo:'bateria',
+      patrimonio:fv('fb_patrimonio'), modelo:fv('fb_modelo'), solicitante:fv('fb_solicitante'),
+      nf:fv('fb_nf'), dataSolicitacao:fv('fb_dataSolicitacao'), tag:fv('fb_tag'),
+      tec1:fv('fb_tec1'), tec2:fv('fb_tec2'), vistoGestor:fv('fb_vistoGestor'),
+      insp1:fc('fb_insp1'), insp1n:fc('fb_insp1n'),
+      insp2:fc('fb_insp2'), insp2n:fc('fb_insp2n'),
+      insp3:fc('fb_insp3'), insp3n:fc('fb_insp3n'),
+      obs:fv('fb_obs'),
+      planoTeste:fv('fb_planoTeste'), difTensao:fv('fb_difTensao'),
+      tensaoMaxMin:fv('fb_tensaoMaxMin'), tensaoPack:fv('fb_tensaoPack'),
+      regimeInsp:fv('fb_regimeInsp'), tipoCelula:fv('fb_tipoCelula'),
+      capacidade:fv('fb_capacidade'), ferramentaInsp:fv('fb_ferramentaInsp'),
+      aprovBateria:getAprov('bat-aprov'),
+      libTec1:fv('fb_libTec1'), libTec2:fv('fb_libTec2'), vistoInspetor:fv('fb_vistoInspetor'),
+      dataRetorno:fv('fb_dataRetorno'), bateriaDisp:fv('fb_bateriaDisp'),
+      criadoEm: currentFichaId?undefined:new Date().toISOString(),
+    };
+  } else {
+    return {
+      tipo:'carregador',
+      patrimonio:fv('fc_patrimonio'), usuario:fv('fc_usuario'), modeloCarregador:fv('fc_modeloCarregador'),
+      nf:fv('fc_nf'), dataRecebimento:fv('fc_dataRecebimento'),
+      nomeInsp1:fv('fc_nomeInsp1'), nomeInsp2:fv('fc_nomeInsp2'), vistoInspetor:fv('fc_vistoInspetor'),
+      cinsp1:fc('fc_cinsp1'), cinsp1n:fc('fc_cinsp1n'),
+      cinsp2:fc('fc_cinsp2'), cinsp2n:fc('fc_cinsp2n'),
+      cinsp3:fc('fc_cinsp3'), cinsp3n:fc('fc_cinsp3n'),
+      obs:fv('fc_obs'), planoTeste:fv('fc_planoTeste'),
+      tensao:fv('fc_tensao'), corrente:fv('fc_corrente'),
+      nivelInsp:fv('fc_nivelInsp'), obsPlano:fv('fc_obsPlano'),
+      aprovCarregador:getAprov('car-aprov'),
+      libInsp1:fv('fc_libInsp1'), libInsp2:fv('fc_libInsp2'), libVistoInspetor:fv('fc_libVistoInspetor'),
+      criadoEm: currentFichaId?undefined:new Date().toISOString(),
+    };
+  }
+}
+
+async function salvarFicha(){
+  if(!isAdmin)return;
+  const data=collectFichaData();
+  try{
+    const col=window.__fb.collection(window.__fb.db,'laboratorio');
+    if(currentFichaId){
+      await window.__fb.setDoc(window.__fb.doc(window.__fb.db,'laboratorio',currentFichaId), data, {merge:true});
+    } else {
+      const ref=await window.__fb.addDoc(col, data);
+      currentFichaId=ref.id;
+    }
+    closeFicha();
+    loadLabList();
+    alert('Ficha salva com sucesso!');
+  }catch(e){ console.error(e); alert('Erro ao salvar. Verifique as permissões do Firestore.'); }
+}
+
+async function delFicha(id){
+  if(!isAdmin)return;
+  if(!confirm('Remover esta ficha permanentemente?'))return;
+  try{
+    await window.__fb.deleteDoc(window.__fb.doc(window.__fb.db,'laboratorio',id));
+    loadLabList();
+  }catch(e){ alert('Erro ao remover ficha.'); }
+}
+
+async function gerarFichaPDF(id){
+  let data={};
+  try{
+    const allSnap=await window.__fb.getDocs(window.__fb.collection(window.__fb.db,'laboratorio'));
+    allSnap.forEach(d=>{ if(d.id===id) data={...d.data()}; });
+  }catch(e){ alert('Erro ao carregar ficha para PDF.'); return; }
+  if(data.tipo==='bateria') gerarPDFBateria(data);
+  else gerarPDFCarregador(data);
+}
+
+// ─── FICHA BATERIA HTML ───────────────────────────────────────────────────
+function buildFichaBateria(d){
+  return `<div class="ficha-wrap">
+    <div class="ficha-header">
+      <div class="ficha-title-block">
+        <h3>Sistema de Gestão da Qualidade — IT - AT - IR – BT</h3>
+        <p>Ficha de Requisição de Bateria (FRB)</p>
+      </div>
+      <div class="ficha-logo">BRMobility<br><small>Veículos Inteligentes</small></div>
+    </div>
+    <div class="ficha-row">
+      <div class="ficha-field"><label>Solicitante</label><input id="fb_solicitante" value="${d.solicitante||''}"/></div>
+      <div class="ficha-field"><label>Modelo Veículo</label><input id="fb_modelo" value="${d.modelo||''}"/></div>
+    </div>
+    <div class="ficha-row">
+      <div class="ficha-field"><label>N° NF</label><input id="fb_nf" value="${d.nf||''}"/></div>
+      <div class="ficha-field"><label>Data de Solicitação</label><input type="date" id="fb_dataSolicitacao" value="${d.dataSolicitacao||''}"/></div>
+    </div>
+    <div class="ficha-row">
+      <div class="ficha-field" style="flex:2"><label>Téc. Responsável 1°</label><input id="fb_tec1" value="${d.tec1||''}"/></div>
+      <div class="ficha-field" style="flex:2"><label>Téc. Responsável 2°</label><input id="fb_tec2" value="${d.tec2||''}"/></div>
+      <div class="ficha-field"><label>Visto Gestor</label><input id="fb_vistoGestor" value="${d.vistoGestor||''}"/></div>
+    </div>
+    <div class="ficha-row">
+      <div class="ficha-field"><label>N° Patrimônio</label><input id="fb_patrimonio" value="${d.patrimonio||''}"/></div>
+      <div class="ficha-field"><label>Nº TAG</label><input id="fb_tag" value="${d.tag||''}"/></div>
+    </div>
+
+    <div class="ficha-section-title">Tipos de Inspeção</div>
+    <table class="ficha-insp-table">
+      <tr><th style="width:70%">Inspeção</th><th style="text-align:center">SIM</th><th style="text-align:center">NÃO</th></tr>
+      <tr><td>As peças correspondem a NF?</td>
+          <td style="text-align:center"><input type="checkbox" id="fb_insp1" ${d.insp1?'checked':''}></td>
+          <td style="text-align:center"><input type="checkbox" id="fb_insp1n" ${d.insp1n?'checked':''}></td></tr>
+      <tr><td>VISUAL (V): Todos os componentes apresentam integridade visual?</td>
+          <td style="text-align:center"><input type="checkbox" id="fb_insp2" ${d.insp2?'checked':''}></td>
+          <td style="text-align:center"><input type="checkbox" id="fb_insp2n" ${d.insp2n?'checked':''}></td></tr>
+      <tr><td>MEDIÇÃO DE TENSÃO: A avaliação das tensões ocorreu satisfatoriamente?</td>
+          <td style="text-align:center"><input type="checkbox" id="fb_insp3" ${d.insp3?'checked':''}></td>
+          <td style="text-align:center"><input type="checkbox" id="fb_insp3n" ${d.insp3n?'checked':''}></td></tr>
+      <tr><td colspan="3"><label style="font-size:10px;font-weight:700;color:#16424a">OBS:</label>
+          <textarea class="ficha-obs" id="fb_obs">${d.obs||''}</textarea></td></tr>
+    </table>
+
+    <div class="ficha-row">
+      <div class="ficha-field"><label>Plano de Teste</label><input id="fb_planoTeste" value="${d.planoTeste||''}"/></div>
+      <div class="ficha-field"><label>Diferença de Tensão de Célula</label><input id="fb_difTensao" value="${d.difTensao||''}"/></div>
+      <div class="ficha-field"><label>Tensão Máxima e Mínima das Células</label><input id="fb_tensaoMaxMin" value="${d.tensaoMaxMin||''}"/></div>
+    </div>
+    <div class="ficha-row">
+      <div class="ficha-field"><label>Tensão do Pack</label><input id="fb_tensaoPack" value="${d.tensaoPack||''}"/></div>
+      <div class="ficha-field"><label>Regime de Inspeção</label><input id="fb_regimeInsp" value="${d.regimeInsp||''}"/></div>
+      <div class="ficha-field"><label>Tipo de Célula</label><input id="fb_tipoCelula" value="${d.tipoCelula||''}"/></div>
+      <div class="ficha-field"><label>Capacidade</label><input id="fb_capacidade" value="${d.capacidade||''}"/></div>
+    </div>
+    <div class="ficha-row">
+      <div class="ficha-field"><label>Ferramenta de Inspeção</label><input id="fb_ferramentaInsp" value="${d.ferramentaInsp||''}"/></div>
+    </div>
+
+    <div class="ficha-section-title">Aprovação da Bateria</div>
+    <div class="ficha-approval">
+      <label>Aprovação:</label>
+      <div class="ficha-approval-btns">
+        <button class="ficha-aprov-sim bat-aprov-sim ${d.aprovBateria==='SIM'?'sel':''}" onclick="toggleAprov('bat-aprov','SIM')">✓ SIM</button>
+        <button class="ficha-aprov-nao bat-aprov-nao ${d.aprovBateria==='NÃO'?'sel':''}" onclick="toggleAprov('bat-aprov','NÃO')">✕ NÃO</button>
+      </div>
+    </div>
+
+    <div class="ficha-section-title">Liberação para Uso</div>
+    <div class="ficha-row">
+      <div class="ficha-field"><label>Téc. Responsável 1°</label><input id="fb_libTec1" value="${d.libTec1||''}"/></div>
+      <div class="ficha-field"><label>Téc. Responsável 2°</label><input id="fb_libTec2" value="${d.libTec2||''}"/></div>
+      <div class="ficha-field"><label>Visto Inspetor</label><input id="fb_vistoInspetor" value="${d.vistoInspetor||''}"/></div>
+    </div>
+    <div class="ficha-row">
+      <div class="ficha-field"><label>Data de Retorno ao Mercado</label><input type="date" id="fb_dataRetorno" value="${d.dataRetorno||''}"/></div>
+      <div class="ficha-field"><label>Bateria Disponível ao Posto</label><input id="fb_bateriaDisp" value="${d.bateriaDisp||''}"/></div>
+    </div>
+
+    <div class="ficha-btns">
+      <button class="btn-ficha-cancel" onclick="closeFicha()">Cancelar</button>
+      <button class="btn-ficha-pdf" onclick="salvarEGerarPDF()">⬇️ Salvar e Gerar PDF</button>
+      <button class="btn-ficha-save" onclick="salvarFicha()">💾 Salvar</button>
+    </div>
+  </div>`;
+}
+
+// ─── FICHA CARREGADOR HTML ────────────────────────────────────────────────
+function buildFichaCarregador(d){
+  return `<div class="ficha-wrap">
+    <div class="ficha-header">
+      <div class="ficha-title-block">
+        <h3>Sistema de Gestão da Qualidade — IT – AT – FCH - CARREG</h3>
+        <p>Ficha de Acompanhamento de Carregadores</p>
+      </div>
+      <div class="ficha-logo">BRMobility<br><small>Veículos Inteligentes</small></div>
+    </div>
+    <div class="ficha-row">
+      <div class="ficha-field" style="flex:2"><label>Usuário</label><input id="fc_usuario" value="${d.usuario||''}"/></div>
+      <div class="ficha-field"><label>Modelo do Carregador</label><input id="fc_modeloCarregador" value="${d.modeloCarregador||''}"/></div>
+    </div>
+    <div class="ficha-row">
+      <div class="ficha-field"><label>N° NF</label><input id="fc_nf" value="${d.nf||''}"/></div>
+      <div class="ficha-field"><label>Data de Recebimento</label><input type="date" id="fc_dataRecebimento" value="${d.dataRecebimento||''}"/></div>
+    </div>
+    <div class="ficha-row">
+      <div class="ficha-field" style="flex:2"><label>Nome Inspetor 1°</label><input id="fc_nomeInsp1" value="${d.nomeInsp1||''}"/></div>
+      <div class="ficha-field" style="flex:2"><label>Nome Inspetor 2°</label><input id="fc_nomeInsp2" value="${d.nomeInsp2||''}"/></div>
+      <div class="ficha-field"><label>Visto Inspetor</label><input id="fc_vistoInspetor" value="${d.vistoInspetor||''}"/></div>
+    </div>
+    <div class="ficha-row">
+      <div class="ficha-field"><label>N° Patrimônio</label><input id="fc_patrimonio" value="${d.patrimonio||''}"/></div>
+    </div>
+
+    <div class="ficha-section-title">Tipos de Inspeção</div>
+    <table class="ficha-insp-table">
+      <tr><th style="width:70%">Inspeção</th><th style="text-align:center">SIM</th><th style="text-align:center">NÃO</th></tr>
+      <tr><td>As peças correspondem a NF?</td>
+          <td style="text-align:center"><input type="checkbox" id="fc_cinsp1" ${d.cinsp1?'checked':''}></td>
+          <td style="text-align:center"><input type="checkbox" id="fc_cinsp1n" ${d.cinsp1n?'checked':''}></td></tr>
+      <tr><td>VISUAL (V): Todos os componentes apresentam integridade visual?</td>
+          <td style="text-align:center"><input type="checkbox" id="fc_cinsp2" ${d.cinsp2?'checked':''}></td>
+          <td style="text-align:center"><input type="checkbox" id="fc_cinsp2n" ${d.cinsp2n?'checked':''}></td></tr>
+      <tr><td>MEDIÇÃO DE TENSÃO DE SAÍDA: A avaliação das tensões ocorreu satisfatoriamente?</td>
+          <td style="text-align:center"><input type="checkbox" id="fc_cinsp3" ${d.cinsp3?'checked':''}></td>
+          <td style="text-align:center"><input type="checkbox" id="fc_cinsp3n" ${d.cinsp3n?'checked':''}></td></tr>
+      <tr><td colspan="3"><label style="font-size:10px;font-weight:700;color:#16424a">OBS:</label>
+          <textarea class="ficha-obs" id="fc_obs">${d.obs||''}</textarea></td></tr>
+    </table>
+
+    <div class="ficha-section-title">Plano de Teste</div>
+    <div class="ficha-row">
+      <div class="ficha-field"><label>Plano de Teste</label><input id="fc_planoTeste" value="${d.planoTeste||''}"/></div>
+      <div class="ficha-field"><label>Tensão</label><input id="fc_tensao" value="${d.tensao||''}"/></div>
+      <div class="ficha-field"><label>Corrente</label><input id="fc_corrente" value="${d.corrente||''}"/></div>
+    </div>
+    <div class="ficha-row">
+      <div class="ficha-field"><label>Nível de Inspeção</label><input id="fc_nivelInsp" value="${d.nivelInsp||''}"/></div>
+      <div class="ficha-field" style="flex:2"><label>Obs (Plano)</label><input id="fc_obsPlano" value="${d.obsPlano||''}"/></div>
+    </div>
+
+    <div class="ficha-section-title">Aprovação do Carregador</div>
+    <div class="ficha-approval">
+      <label>Aprovação:</label>
+      <div class="ficha-approval-btns">
+        <button class="ficha-aprov-sim car-aprov-sim ${d.aprovCarregador==='SIM'?'sel':''}" onclick="toggleAprov('car-aprov','SIM')">✓ SIM</button>
+        <button class="ficha-aprov-nao car-aprov-nao ${d.aprovCarregador==='NÃO'?'sel':''}" onclick="toggleAprov('car-aprov','NÃO')">✕ NÃO</button>
+      </div>
+    </div>
+
+    <div class="ficha-section-title">Liberação</div>
+    <div class="ficha-row">
+      <div class="ficha-field" style="flex:2"><label>Nome Inspetor 1°</label><input id="fc_libInsp1" value="${d.libInsp1||''}"/></div>
+      <div class="ficha-field" style="flex:2"><label>Nome Inspetor 2°</label><input id="fc_libInsp2" value="${d.libInsp2||''}"/></div>
+      <div class="ficha-field"><label>Visto Inspetor</label><input id="fc_libVistoInspetor" value="${d.libVistoInspetor||''}"/></div>
+    </div>
+
+    <div class="ficha-btns">
+      <button class="btn-ficha-cancel" onclick="closeFicha()">Cancelar</button>
+      <button class="btn-ficha-pdf" onclick="salvarEGerarPDF()">⬇️ Salvar e Gerar PDF</button>
+      <button class="btn-ficha-save" onclick="salvarFicha()">💾 Salvar</button>
+    </div>
+  </div>`;
+}
+
+// ─── PDF BATERIA ──────────────────────────────────────────────────────────
+function gerarPDFBateria(d){
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const pw=190; const ml=10;
+  let y=10;
+
+  // Cabeçalho
+  doc.setFontSize(10); doc.setFont('helvetica','bold');
+  doc.text('Sistema de Gestão da Qualidade',ml,y); y+=5;
+  doc.setFontSize(11); doc.text('IT - AT - IR – BT',ml,y); y+=6;
+  doc.setFontSize(13); doc.text('Ficha de Requisição de Bateria (FRB)',105,y,{align:'center'}); y+=8;
+
+  // Campos cabeçalho
+  const field=(lbl,val,x,yy,w)=>{
+    doc.setFontSize(9); doc.setFont('helvetica','bold'); doc.text(lbl,x,yy);
+    doc.setFont('helvetica','normal'); doc.text(val||'',x+2,yy+5);
+    doc.rect(x,yy+1,w,6);
+  };
+  field('Solicitante',d.solicitante,ml,y,88); field('Modelo Veículo',d.modelo,ml+92,y,98); y+=12;
+  field('N° NF',d.nf,ml,y,88); field('Data de Solicitação',d.dataSolicitacao,ml+92,y,98); y+=12;
+  doc.setFontSize(9); doc.setFont('helvetica','bold'); doc.text('Téc. Responsável',ml,y);
+  doc.setFont('helvetica','normal'); doc.text('1° '+(d.tec1||'___________________'),ml+2,y+5);
+  doc.text('2° '+(d.tec2||'___________________'),ml+2,y+10);
+  doc.rect(ml,y+1,88,14);
+  doc.setFont('helvetica','bold'); doc.text('Visto Gestor',ml+92,y);
+  doc.setFont('helvetica','normal'); doc.text(d.vistoGestor||'',ml+94,y+5);
+  doc.rect(ml+92,y+1,98,14); y+=18;
+  field('N° PATRIMÔNIO',d.patrimonio,ml,y,88); field('Nº TAG',d.tag,ml+92,y,98); y+=12;
+
+  // Tipos de inspeção
+  doc.setFillColor(14,61,68); doc.rect(ml,y,pw,7,'F');
+  doc.setTextColor(255,255,255); doc.setFontSize(9); doc.setFont('helvetica','bold');
+  doc.text('TIPOS DE INSPEÇÃO',105,y+5,{align:'center'});
+  doc.text('SIM',ml+pw-20,y+5,{align:'center'}); doc.text('NÃO',ml+pw-6,y+5,{align:'center'});
+  doc.setTextColor(0,0,0); y+=9;
+  const inspRows=[
+    ['As peças correspondem a NF?',d.insp1,d.insp1n],
+    ['VISUAL (V): Todos os componentes apresentam integridade visual?',d.insp2,d.insp2n],
+    ['MEDIÇÃO DE TENSÃO: A avaliação das tensões ocorreu satisfatoriamente?',d.insp3,d.insp3n],
+  ];
+  inspRows.forEach(([txt,sim,nao])=>{
+    doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
+    doc.rect(ml,y,pw-30,6); doc.text(txt,ml+1,y+4);
+    doc.rect(ml+pw-30,y,15,6); doc.text(sim?'✓':'',ml+pw-23,y+4,{align:'center'});
+    doc.rect(ml+pw-15,y,15,6); doc.text(nao?'✓':'',ml+pw-7,y+4,{align:'center'});
+    y+=6;
+  });
+  doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.text('OBS:',ml,y+4);
+  doc.rect(ml,y,pw,18); doc.setFont('helvetica','normal');
+  if(d.obs) doc.text(doc.splitTextToSize(d.obs,pw-4),ml+1,y+8);
+  y+=22;
+
+  // Plano de teste
+  doc.setFillColor(240,240,240); doc.rect(ml,y,pw,6,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(0,0,0);
+  doc.text('Plano de teste',ml+2,y+4);
+  doc.text('Diferença de tensão de célula',ml+65,y+4);
+  doc.text('Tensão máxima e mínima das células',ml+115,y+4); y+=6;
+  doc.rect(ml,y,60,8); doc.setFont('helvetica','normal'); doc.text(d.planoTeste||'',ml+2,y+5);
+  doc.rect(ml+60,y,55,8); doc.text(d.difTensao||'',ml+62,y+5);
+  doc.rect(ml+115,y,75,8); doc.text(d.tensaoMaxMin||'',ml+117,y+5); y+=8;
+  doc.setFont('helvetica','bold'); doc.text('Tensão do pack',ml+2,y+5);
+  doc.rect(ml,y,60,8); doc.rect(ml+60,y,130,8); doc.setFont('helvetica','normal'); doc.text(d.tensaoPack||'',ml+62,y+5); y+=8;
+  doc.setFillColor(240,240,240);
+  doc.rect(ml,y,60,8,'F'); doc.rect(ml+60,y,55,8,'F'); doc.rect(ml+115,y,75,8,'F');
+  doc.setFont('helvetica','bold');
+  doc.text('Regime de inspeção',ml+2,y+5); doc.text('TIPO DE CÉLULA',ml+62,y+5); doc.text('CAPACIDADE',ml+117,y+5); y+=8;
+  doc.rect(ml,y,60,8); doc.rect(ml+60,y,55,8); doc.rect(ml+115,y,75,8);
+  doc.setFont('helvetica','normal');
+  doc.text(d.regimeInsp||'',ml+2,y+5); doc.text(d.tipoCelula||'',ml+62,y+5); doc.text(d.capacidade||'',ml+117,y+5); y+=8;
+  doc.setFillColor(240,240,240); doc.rect(ml,y,60,8,'F');
+  doc.setFont('helvetica','bold'); doc.text('Ferramenta de inspeção',ml+2,y+5);
+  doc.rect(ml,y,60,8); doc.rect(ml+60,y,130,8); doc.setFont('helvetica','normal'); doc.text(d.ferramentaInsp||'',ml+62,y+5); y+=8;
+
+  // Aprovação
+  doc.setFillColor(200,200,200); doc.rect(ml,y,pw,8,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(9);
+  doc.text('APROVAÇÃO DA BATERIA',ml+2,y+5);
+  doc.text('SIM',ml+80,y+5,{align:'center'}); doc.text('NÃO',ml+140,y+5,{align:'center'}); y+=8;
+  doc.rect(ml,y,pw/2-5,8); doc.rect(ml+pw/2-5,y,pw/2+5,8);
+  doc.setFont('helvetica','normal'); doc.setFontSize(12);
+  if(d.aprovBateria==='SIM'){ doc.setTextColor(5,150,105); doc.text('✓',ml+80,y+6,{align:'center'}); doc.setTextColor(0,0,0); }
+  if(d.aprovBateria==='NÃO'){ doc.setTextColor(220,38,38); doc.text('✕',ml+140,y+6,{align:'center'}); doc.setTextColor(0,0,0); }
+  y+=12;
+
+  // Liberação
+  doc.setFontSize(9); doc.setFont('helvetica','bold'); doc.text('LIBERAÇÃO PARA USO:',ml,y); y+=5;
+  doc.setFont('helvetica','normal');
+  doc.text('1° '+(d.libTec1||'___________________'),ml+2,y+5);
+  doc.text('2° '+(d.libTec2||'___________________'),ml+2,y+10);
+  doc.rect(ml,y,88,14);
+  doc.setFont('helvetica','bold'); doc.text('Visto Inspetor',ml+92,y);
+  doc.setFont('helvetica','normal'); doc.text(d.vistoInspetor||'',ml+94,y+5);
+  doc.rect(ml+92,y,98,14); y+=18;
+  field('Data de retorno ao mercado',d.dataRetorno,ml,y,88);
+  field('Bateria disponível ao posto',d.bateriaDisp,ml+92,y,98);
+
+  // Rodapé
+  doc.setFontSize(7); doc.setTextColor(150,150,150);
+  doc.text('BRMobility — Kanban Virtual — Gerado em '+new Date().toLocaleString('pt-BR'),105,290,{align:'center'});
+
+  const fname='FRB_'+(d.patrimonio||'sem_patrimonio')+'_'+new Date().toISOString().slice(0,10)+'.pdf';
+  doc.save(fname);
+}
+
+// ─── PDF CARREGADOR ───────────────────────────────────────────────────────
+function gerarPDFCarregador(d){
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const pw=190; const ml=10;
+  let y=10;
+
+  doc.setFontSize(10); doc.setFont('helvetica','bold');
+  doc.text('Sistema de Gestão da Qualidade — IT – AT – FCH - CARREG',ml,y); y+=6;
+  doc.setFontSize(13); doc.text('FICHA DE ACOMPANHAMENTO DE CARREGADORES',105,y,{align:'center'}); y+=10;
+
+  const field=(lbl,val,x,yy,w)=>{
+    doc.setFontSize(9); doc.setFont('helvetica','bold'); doc.text(lbl,x,yy);
+    doc.setFont('helvetica','normal'); doc.text(val||'',x+2,yy+5);
+    doc.rect(x,yy+1,w,6);
+  };
+  field('Usuário',d.usuario,ml,y,88); field('Modelo do Carregador',d.modeloCarregador,ml+92,y,98); y+=12;
+  field('N° NF',d.nf,ml,y,88); field('Data de Recebimento',d.dataRecebimento,ml+92,y,98); y+=12;
+  doc.setFontSize(9); doc.setFont('helvetica','bold'); doc.text('Nome Inspetor',ml,y);
+  doc.setFont('helvetica','normal'); doc.text('1° '+(d.nomeInsp1||'___________________'),ml+2,y+5);
+  doc.text('2° '+(d.nomeInsp2||'___________________'),ml+2,y+10);
+  doc.rect(ml,y+1,88,14);
+  doc.setFont('helvetica','bold'); doc.text('Visto Inspetor',ml+92,y);
+  doc.setFont('helvetica','normal'); doc.text(d.vistoInspetor||'',ml+94,y+5);
+  doc.rect(ml+92,y+1,98,14); y+=18;
+  field('N° Patrimônio',d.patrimonio,ml,y,pw); y+=12;
+
+  doc.setFillColor(14,61,68); doc.rect(ml,y,pw,7,'F');
+  doc.setTextColor(255,255,255); doc.setFontSize(9); doc.setFont('helvetica','bold');
+  doc.text('TIPOS DE INSPEÇÃO',105,y+5,{align:'center'});
+  doc.text('SIM',ml+pw-20,y+5,{align:'center'}); doc.text('NÃO',ml+pw-6,y+5,{align:'center'});
+  doc.setTextColor(0,0,0); y+=9;
+  [['As peças correspondem a NF?',d.cinsp1,d.cinsp1n],
+   ['VISUAL (V): Todos os componentes apresentam integridade visual?',d.cinsp2,d.cinsp2n],
+   ['MEDIÇÃO DE TENSÃO DE SAÍDA: A avaliação das tensões ocorreu satisfatoriamente?',d.cinsp3,d.cinsp3n]
+  ].forEach(([txt,sim,nao])=>{
+    doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
+    doc.rect(ml,y,pw-30,6); doc.text(txt,ml+1,y+4);
+    doc.rect(ml+pw-30,y,15,6); doc.text(sim?'✓':'',ml+pw-23,y+4,{align:'center'});
+    doc.rect(ml+pw-15,y,15,6); doc.text(nao?'✓':'',ml+pw-7,y+4,{align:'center'});
+    y+=6;
+  });
+  doc.setFont('helvetica','bold'); doc.text('OBS:',ml,y+4);
+  doc.rect(ml,y,pw,18); doc.setFont('helvetica','normal');
+  if(d.obs) doc.text(doc.splitTextToSize(d.obs,pw-4),ml+1,y+8); y+=22;
+
+  // Plano de teste
+  doc.setFillColor(200,200,200); doc.rect(ml,y,60,7,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.text('Plano de teste',ml+2,y+5);
+  doc.rect(ml,y,60,7); doc.rect(ml+60,y,130,7); doc.setFont('helvetica','normal'); doc.text(d.planoTeste||'',ml+62,y+5); y+=7;
+  doc.setFillColor(200,200,200); doc.rect(ml,y,30,7,'F'); doc.rect(ml,y+7,30,7,'F');
+  doc.setFont('helvetica','bold'); doc.text('TENSÃO',ml+2,y+5); doc.text('CORRENTE',ml+2,y+12);
+  doc.rect(ml,y,30,7); doc.rect(ml+30,y,30,7); doc.rect(ml,y+7,30,7); doc.rect(ml+30,y+7,30,7);
+  doc.setFont('helvetica','normal'); doc.text(d.tensao||'',ml+32,y+5); doc.text(d.corrente||'',ml+32,y+12);
+  doc.setFont('helvetica','bold'); doc.text('Obs:',ml+65,y+5); doc.rect(ml+62,y,128,14); doc.setFont('helvetica','normal');
+  if(d.obsPlano) doc.text(d.obsPlano,ml+64,y+5); y+=14;
+  doc.setFillColor(200,200,200); doc.rect(ml,y,30,7,'F');
+  doc.setFont('helvetica','bold'); doc.text('Nível de inspeção',ml+2,y+5);
+  doc.rect(ml,y,30,7); doc.rect(ml+30,y,160,7); doc.setFont('helvetica','normal'); doc.text(d.nivelInsp||'',ml+32,y+5); y+=7;
+
+  doc.setFillColor(200,200,200); doc.rect(ml,y,pw,8,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(9);
+  doc.text('APROVAÇÃO DO CARREGADOR',ml+2,y+5);
+  doc.text('SIM',ml+80,y+5,{align:'center'}); doc.text('NÃO',ml+140,y+5,{align:'center'}); y+=8;
+  doc.rect(ml,y,pw/2-5,8); doc.rect(ml+pw/2-5,y,pw/2+5,8);
+  doc.setFontSize(12); doc.setFont('helvetica','normal');
+  if(d.aprovCarregador==='SIM'){ doc.setTextColor(5,150,105); doc.text('✓',ml+80,y+6,{align:'center'}); doc.setTextColor(0,0,0); }
+  if(d.aprovCarregador==='NÃO'){ doc.setTextColor(220,38,38); doc.text('✕',ml+140,y+6,{align:'center'}); doc.setTextColor(0,0,0); }
+  y+=14;
+
+  doc.setFontSize(9); doc.setFont('helvetica','bold'); doc.text('Nome Inspetor',ml,y);
+  doc.setFont('helvetica','normal'); doc.text('1° '+(d.libInsp1||'___________________'),ml+2,y+5);
+  doc.text('2° '+(d.libInsp2||'___________________'),ml+2,y+10);
+  doc.rect(ml,y+1,88,14);
+  doc.setFont('helvetica','bold'); doc.text('Visto Inspetor',ml+92,y);
+  doc.setFont('helvetica','normal'); doc.text(d.libVistoInspetor||'',ml+94,y+5);
+  doc.rect(ml+92,y+1,98,14);
+
+  doc.setFontSize(7); doc.setTextColor(150,150,150);
+  doc.text('BRMobility — Kanban Virtual — Gerado em '+new Date().toLocaleString('pt-BR'),105,290,{align:'center'});
+
+  const fname='FCH_CARREG_'+(d.patrimonio||'sem_patrimonio')+'_'+new Date().toISOString().slice(0,10)+'.pdf';
+  doc.save(fname);
+}
+
+async function salvarEGerarPDF(){
+  // IMPORTANTE: coleta os dados ANTES de fechar o modal (closeFicha remove os inputs do DOM)
+  const data=collectFichaData();
+  await salvarFicha();
+  // gera o PDF com os dados coletados antes do fechamento
+  if(data.tipo==='bateria') gerarPDFBateria(data);
+  else gerarPDFCarregador(data);
 }
 
 function closeCharts(){ document.getElementById('modalCharts').classList.remove('open'); }
