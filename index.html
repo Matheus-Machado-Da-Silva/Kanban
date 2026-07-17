@@ -206,6 +206,22 @@ tr:last-child td{border-bottom:none}
 .chk-btn.nok.active{background:#fee2e2;border-color:#dc2626;color:#dc2626}
 .chk-btn.np.active{background:#f3f4f6;border-color:#6b7280;color:#6b7280}
 .chk-btn:not(.active){color:#9ca3af}
+/* CHECKLIST MANUTENÇÃO */
+.man-group{margin-bottom:1.2rem}
+.man-group-title{background:#0e3d44;color:#a8d4d9;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;padding:5px 10px;border-radius:5px;margin-bottom:6px}
+.man-item{border-bottom:1px solid #f0f0f0;padding:6px 0}
+.man-item-top{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.man-item-name{font-size:12px;color:#16424a;flex:1;min-width:100px}
+.man-btns{display:flex;gap:3px;flex-shrink:0}
+.man-btn{border:1px solid #ddd;background:#fff;border-radius:5px;padding:4px 7px;font-size:10px;font-weight:700;cursor:pointer;-webkit-appearance:none;min-width:38px;text-align:center;transition:all .12s}
+.man-btn.ok.active{background:#d1fae5;border-color:#059669;color:#059669}
+.man-btn.recon.active{background:#fef3c7;border-color:#d97706;color:#d97706}
+.man-btn.trocado.active{background:#dbeafe;border-color:#2563eb;color:#2563eb}
+.man-btn.npos.active{background:#f3f4f6;border-color:#6b7280;color:#6b7280}
+.man-btn:not(.active){color:#9ca3af}
+.man-obs-btn{background:none;border:1px solid #0e6e7a44;color:#0e6e7a;border-radius:4px;padding:3px 7px;font-size:10px;cursor:pointer;-webkit-appearance:none}
+.man-obs-wrap{display:none;margin-top:5px}
+.man-obs-input{width:100%;border:1px solid #0e6e7a33;border-radius:5px;padding:5px 8px;font-size:12px;color:#16424a;resize:vertical;min-height:36px;font-family:inherit}
 .chk-result-btns{display:flex;gap:8px;margin-top:1rem;padding-top:1rem;border-top:1px solid #0e6e7a18}
 .btn-aprovado{background:#059669;color:#fff;border:none;border-radius:8px;flex:1;height:44px;font-size:14px;font-weight:700;cursor:pointer;-webkit-appearance:none}
 .btn-reprovado{background:#dc2626;color:#fff;border:none;border-radius:8px;flex:1;height:44px;font-size:14px;font-weight:700;cursor:pointer;-webkit-appearance:none}
@@ -277,7 +293,8 @@ tr:last-child td{border-bottom:none}
     <button class="btn-lab" onclick="toggleLab()">🔬 Laboratório</button>
   </div>
   <div class="controls" id="viewOnlyControls">
-    <span class="view-only-tag" style="align-self:center;flex:1">👁️ Modo visualização — você está vendo o Kanban como visitante autorizado</span>
+    <span class="view-only-tag" style="align-self:center;flex:1" id="viewOnlyTag">👁️ Modo visualização — você está vendo o Kanban como visitante autorizado</span>
+    <button class="btn-lab" onclick="toggleLab()" id="btnLabViewer" style="display:none">🔬 Laboratório</button>
   </div>
   <div class="count-info" id="countInfo"></div>
 
@@ -502,6 +519,20 @@ tr:last-child td{border-bottom:none}
 <div class="modal-bg" id="modalFicha">
   <div class="modal" style="max-width:680px;max-height:92vh">
     <div id="fichaContent"></div>
+  </div>
+</div>
+
+<!-- MODAL CHECKLIST MANUTENÇÃO -->
+<div class="modal-bg" id="modalManutencao">
+  <div class="modal" style="max-width:620px;max-height:92vh">
+    <h2>🔧 Diário de Manutenção</h2>
+    <div id="manutencaoVehicleInfo" style="font-size:13px;font-weight:700;color:#16424a;margin-bottom:1rem;background:#e6f2f3;padding:8px 12px;border-radius:8px"></div>
+    <div id="manutencaoItems" style="max-height:60vh;overflow-y:auto;-webkit-overflow-scrolling:touch"></div>
+    <p style="font-size:11px;color:#f59e0b;margin-top:.5rem">⚠️ O preenchimento do checklist de manutenção é obrigatório para avançar para "Em Teste".</p>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="cancelManutencao()">Cancelar</button>
+      <button class="btn-save" style="background:#f59e0b" onclick="confirmarManutencao()">✓ Confirmar e Avançar para Em Teste</button>
+    </div>
   </div>
 </div>
 
@@ -766,6 +797,7 @@ let isViewer=false;     // true para e-mails @brmobility.com.br autorizados (só
 let isExpedicao=false;  // true para expedicao@brmobility.com.br (leitura + converter Stand By → Enviado)
 let isTecnico=false;    // true para técnicos (maxwel, aran, brandon): avançar status passo a passo
 let currentUserEmail=null;
+let isLab=false;        // true para tecnica@ e gabriel@ — acesso ao laboratório
 // Laboratório
 let labVisible=false;
 let currentFichaId=null;
@@ -785,7 +817,18 @@ const AUTHORIZED_VIEWER_EMAILS=[
   'financeiro@brmobility.com.br',
   'expedicao@brmobility.com.br',
   'vanessa@brmobility.com.br',
-  'comercial@brmobility.com.br'
+  'comercial@brmobility.com.br',
+  'sergio@brmobility.com.br',
+  'ricardo@brmobility.com.br',
+  'cassiano@brmobility.com.br',
+  'rodrigo@brmobility.com.br',
+  'tecnica@brmobility.com.br',
+  'gabriel@brmobility.com.br'
+];
+// Emails com acesso ao Laboratório
+const LAB_EMAILS=[
+  'tecnica@brmobility.com.br',
+  'gabriel@brmobility.com.br'
 ];
 const TECNICO_EMAILS=[
   'maxwel@brmobility.com.br',
@@ -818,8 +861,13 @@ function setPermissionUI(){
   document.getElementById('editControls').style.display=isAdmin?'flex':'none';
   document.getElementById('viewOnlyControls').style.display=(isLoggedIn&&!isAdmin)?'flex':'none';
   document.getElementById('thAcoes').style.display=isAdmin?'':'none';
-  // esconde laboratório se não for admin
-  if(!isAdmin){ labVisible=false; const lp=document.getElementById('labPage'); if(lp) lp.style.display='none'; }
+  // mostra botão de laboratório para admin e isLab
+  const btnLab=document.querySelector('.btn-lab');
+  if(btnLab) btnLab.style.display=(isAdmin||isLab)?'':'none';
+  const btnLabViewer=document.getElementById('btnLabViewer');
+  if(btnLabViewer) btnLabViewer.style.display=(!isAdmin&&isLab)?'inline-flex':'none';
+  // esconde lab page para quem não tem acesso
+  if(!isAdmin&&!isLab){ labVisible=false; const lp=document.getElementById('labPage'); if(lp) lp.style.display='none'; }
 
   const loginArea=document.getElementById('loginArea');
   const btnOpenLogin=document.getElementById('btnOpenLogin');
@@ -832,7 +880,7 @@ function setPermissionUI(){
       userChip.className='user-chip';
       loginArea.appendChild(userChip);
     }
-    const label=isAdmin?'● admin':isExpedicao?'📦 expedição':isTecnico?'🔧 técnico':'👁️ visualizando';
+    const label=isAdmin?'● admin':isExpedicao?'📦 expedição':isTecnico?'🔧 técnico':isLab?'🔬 laboratório':'👁️ visualizando';
     userChip.innerHTML=label+'<button class="btn-logout" onclick="doLogout()">Sair</button>';
   } else {
     btnOpenLogin.style.display='inline-block';
@@ -875,6 +923,7 @@ window.addEventListener('fb-ready', ()=>{
     isExpedicao = !!user && currentUserEmail===EXPEDICAO_EMAIL;
     isTecnico = !!user && TECNICO_EMAILS.includes(currentUserEmail||'');
     isViewer = !!user && !isAdmin && !isExpedicao && !isTecnico && AUTHORIZED_VIEWER_EMAILS.includes(currentUserEmail||'');
+    isLab = !!user && (LAB_EMAILS.includes(currentUserEmail||'') || isAdmin);
     isLoggedIn = isAdmin || isViewer || isExpedicao || isTecnico;
     setPermissionUI();
   });
@@ -943,7 +992,7 @@ async function doViewerLogin(){
     errBox.style.display='block';
     return;
   }
-  if(!AUTHORIZED_VIEWER_EMAILS.includes(emailRaw) && !TECNICO_EMAILS.includes(emailRaw) && emailRaw!==EXPEDICAO_EMAIL){
+  if(!AUTHORIZED_VIEWER_EMAILS.includes(emailRaw) && !TECNICO_EMAILS.includes(emailRaw) && emailRaw!==EXPEDICAO_EMAIL && !LAB_EMAILS.includes(emailRaw)){
     errBox.textContent='⚠️ Este e-mail não está autorizado a acessar o Kanban.';
     errBox.style.display='block';
     return;
@@ -1180,6 +1229,7 @@ function render(){
             <td>${v.dataSaida?new Date(v.dataSaida).toLocaleDateString('pt-BR'):'—'}</td>
             ${isAdmin?`<td><div class="action-btns">
               <button class="btn-edit" onclick="openEditEnviado(${ri})" title="Editar">✏️</button>
+              <button style="background:none;border:1px solid #0e6e7a;color:#0e6e7a;border-radius:4px;padding:3px 6px;font-size:10px;font-weight:700;cursor:pointer" onclick="retornarEnviado(${ri})" title="Retornar ao Kanban">↩️</button>
               <button class="btn-del" onclick="delEnviado(${ri})" title="Remover">✕</button>
             </div></td>`:''}
           </tr>`;
@@ -1201,13 +1251,38 @@ function changeStatus(i,val){
     const nextIdx=TECNICO_FLOW.indexOf(val);
     if(nextIdx===-1 || nextIdx !== currentIdx+1){
       alert('Você só pode avançar para o próximo status: '+
-        (TECNICO_FLOW[currentIdx+1]||'(nenhum disponível'));
-      render(); // reverte o select visualmente
+        (TECNICO_FLOW[currentIdx+1]||'(nenhum disponível)'));
+      render();
       return;
+    }
+    // ITEM 6: técnicos NÃO podem colocar em Vistoria — só o admin faz vistoria
+    if(val==='Em Vistoria'){
+      alert('A vistoria deve ser realizada pelo administrador do sistema.');
+      render();
+      return;
+    }
+    // ITEM 7: ao tirar de "Aguardando Manutenção" para "Em Produção",
+    // registra automaticamente o técnico responsável pelo nome do email logado
+    if(currentStatus==='Aguardando Manutenção' && val==='Em Produção'){
+      const nomesTecnicos={
+        'maxwel@brmobility.com.br':'Maxwel Gatti',
+        'aran@brmobility.com.br':'Aran Monteiro',
+        'brandon@brmobility.com.br':'Brandon David'
+      };
+      const nomeLogado=nomesTecnicos[currentUserEmail]||currentUserEmail;
+      if(!vehicles[i].tecnico){
+        vehicles[i].tecnico=nomeLogado;
+      }
     }
   }
 
-  if(val==='Em Vistoria'){
+  // ITEM 8: ao mover para "Em Teste", abre checklist de manutenção obrigatório
+  if(val==='Em Teste' && (isAdmin||isTecnico)){
+    openChecklistManutencao(i, val);
+    return;
+  }
+
+  if(val==='Em Vistoria' && isAdmin){
     openTechnicianPopup(i, val);
     return;
   }
@@ -1324,6 +1399,112 @@ function saveVehicle(){
   closeAdd();render();
 }
 
+
+// ==================== CHECKLIST MANUTENÇÃO ====================
+const MANUTENCAO_GROUPS=[
+  {grupo:'Plataforma', itens:['Assoalho Metálico','Assoalho Plástico','Tapetes','Outros (Plataforma)']},
+  {grupo:'Direção', itens:['"T" da Torre','Travas da Torre','Manoplas','Pivô','Display (Direção)','Outros (Direção)']},
+  {grupo:'Eletrônica', itens:['Power Board','Control Board','Drive Board','Main Board','Motor','Sensores','Cabeamento','Outros (Eletrônica)']},
+  {grupo:'Mecânica', itens:['Couplings','Transmissão','Outros (Mecânica)']},
+  {grupo:'Acessórios', itens:['Para-lamas','Carenagens','Display (Acessórios)','Outros (Acessórios)']},
+  {grupo:'Calibração', itens:['Aplicativo','Controle','Outros (Calibração)']},
+];
+
+let manutencaoTargetIdx=null;
+let manutencaoTargetStatus=null;
+let manutencaoState={}; // {item: {val:'OK'|'Recon'|'Trocado'|'Não Possui', obs:''}}
+
+function openChecklistManutencao(i, nextStatus){
+  manutencaoTargetIdx=i;
+  manutencaoTargetStatus=nextStatus;
+  const v=vehicles[i];
+  manutencaoState=v.checklistManutencao?JSON.parse(JSON.stringify(v.checklistManutencao)):{};
+  document.getElementById('manutencaoVehicleInfo').textContent=
+    v.modelo+' — Patrimônio '+v.patrimonio+(v.tecnico?' | Técnico: '+v.tecnico:'');
+  renderManutencaoItems();
+  document.getElementById('modalManutencao').classList.add('open');
+}
+
+function renderManutencaoItems(){
+  const container=document.getElementById('manutencaoItems');
+  container.innerHTML=MANUTENCAO_GROUPS.map((g,gi)=>`
+    <div class="man-group">
+      <div class="man-group-title">${g.grupo}</div>
+      ${g.itens.map((item,ii)=>{
+        const key=`${gi}_${ii}`;
+        const state=manutencaoState[item]||{val:null,obs:''};
+        const v=state.val;
+        return `<div class="man-item" id="mitem_${gi}_${ii}">
+          <div class="man-item-top">
+            <span class="man-item-name">${item}</span>
+            <div class="man-btns">
+              <button class="man-btn ok${v==='OK'?' active':''}" onclick="setManItem('${item.replace(/'/g,"\\'")}','OK')">OK</button>
+              <button class="man-btn recon${v==='Recon'?' active':''}" onclick="setManItem('${item.replace(/'/g,"\\'")}','Recon')">Recon</button>
+              <button class="man-btn trocado${v==='Trocado'?' active':''}" onclick="setManItem('${item.replace(/'/g,"\\'")}','Trocado')">Trocado</button>
+              <button class="man-btn npos${v==='Não Possui'?' active':''}" onclick="setManItem('${item.replace(/'/g,"\\'")}','Não Possui')">N/P</button>
+            </div>
+            <button class="man-obs-btn" onclick="toggleManObs('${item.replace(/'/g,"\\'")}')">+ obs</button>
+          </div>
+          <div class="man-obs-wrap" id="manobs_${gi}_${ii}" style="display:${state.obs?'block':'none'}">
+            <textarea class="man-obs-input" placeholder="Observação..." 
+              onchange="setManObs('${item.replace(/'/g,"\\'")}',this.value)">${state.obs||''}</textarea>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`).join('');
+}
+
+function setManItem(item, val){
+  if(!manutencaoState[item]) manutencaoState[item]={val:null,obs:''};
+  manutencaoState[item].val = manutencaoState[item].val===val ? null : val;
+  renderManutencaoItems();
+}
+
+function setManObs(item, obs){
+  if(!manutencaoState[item]) manutencaoState[item]={val:null,obs:''};
+  manutencaoState[item].obs=obs;
+}
+
+function toggleManObs(item){
+  // Encontra o elemento de obs pelo item name
+  let found=null;
+  MANUTENCAO_GROUPS.forEach((g,gi)=>{
+    g.itens.forEach((it,ii)=>{
+      if(it===item) found=`manobs_${gi}_${ii}`;
+    });
+  });
+  if(!found)return;
+  const el=document.getElementById(found);
+  if(!el)return;
+  const showing=el.style.display!=='none';
+  el.style.display=showing?'none':'block';
+  if(!showing){
+    const ta=el.querySelector('textarea');
+    if(ta) setTimeout(()=>ta.focus(),50);
+  }
+}
+
+async function confirmarManutencao(){
+  if(manutencaoTargetIdx===null)return;
+  const i=manutencaoTargetIdx;
+  const oldKey=vehicles[i].modelo+'|'+vehicles[i].patrimonio;
+  const statusAnterior=vehicles[i].status;
+  vehicles[i].checklistManutencao={...manutencaoState};
+  vehicles[i].checklistManutencaoData=new Date().toISOString();
+  vehicles[i].status=manutencaoTargetStatus;
+  await persistUpsert(vehicles[i], oldKey, statusAnterior);
+  logStatusHistory(vehicles[i], statusAnterior);
+  document.getElementById('modalManutencao').classList.remove('open');
+  manutencaoTargetIdx=null;
+  render();
+}
+
+function cancelManutencao(){
+  document.getElementById('modalManutencao').classList.remove('open');
+  manutencaoTargetIdx=null;
+  render(); // reverte select visualmente
+}
+document.getElementById('modalManutencao').addEventListener('click',function(e){if(e.target===this)cancelManutencao();});
 
 // ==================== TÉCNICO ====================
 let technicianTargetIdx=null;
@@ -1442,6 +1623,30 @@ function delEnviado(i){
   render();
 }
 
+async function retornarEnviado(i){
+  if(!isAdmin)return;
+  const original=vehicles[i];
+  if(!confirm('Retornar '+original.modelo+'-'+original.patrimonio+' ao Kanban como novo registro?\n\nO registro anterior (enviado) será preservado no histórico.')){return;}
+  // Cria novo registro no Kanban preservando modelo e patrimônio
+  const now=new Date();
+  const novoVeiculo={
+    modelo: original.modelo,
+    patrimonio: original.patrimonio,
+    status: 'Aguardando Manutenção',
+    dataEntrada: now.toISOString(),
+    tecnico: null,
+    destino: null,
+    dataSaida: null,
+    checklist: null,
+    retornadoDe: original.dataSaida||null, // referência ao envio anterior
+  };
+  vehicles.push(novoVeiculo);
+  await persistUpsert(novoVeiculo, null, null);
+  logStatusHistory(novoVeiculo, null);
+  alert('Veículo retornado ao Kanban como novo registro em "Aguardando Manutenção".\nO registro anterior permanece salvo nos Enviados.');
+  render();
+}
+
 document.getElementById('modalEditEnviado').addEventListener('click',function(e){if(e.target===this)closeEditEnviado();});
 
 // ==================== CHECKLIST ====================
@@ -1529,7 +1734,8 @@ async function aprovarChecklist(){
   const i=checklistTargetIdx;
   const oldKey=vehicles[i].modelo+'|'+vehicles[i].patrimonio;
   const statusAnterior=vehicles[i].status;
-  vehicles[i].checklist=checklistState;
+  // garante que todos os estados OK/NOK/NP estão salvos antes de aprovar
+  vehicles[i].checklist={...checklistState};
   vehicles[i].checklistData=new Date().toISOString();
   vehicles[i].checklistResultado='Aprovado';
   vehicles[i].status='Stand By';
@@ -1544,7 +1750,8 @@ async function reprovarChecklist(){
   const i=checklistTargetIdx;
   const oldKey=vehicles[i].modelo+'|'+vehicles[i].patrimonio;
   const statusAnterior=vehicles[i].status;
-  vehicles[i].checklist=checklistState;
+  // garante que todos os estados OK/NOK/NP estão salvos antes de reprovar
+  vehicles[i].checklist={...checklistState};
   vehicles[i].checklistData=new Date().toISOString();
   vehicles[i].checklistResultado='Reprovado';
   vehicles[i].status='Em Produção';
@@ -1836,7 +2043,7 @@ async function openCharts(){
 // ==================== LABORATÓRIO ====================
 
 function toggleLab(){
-  if(!isAdmin)return;
+  if(!isAdmin&&!isLab)return;
   labVisible=!labVisible;
   document.getElementById('labPage').style.display=labVisible?'block':'none';
   if(labVisible) loadLabList();
@@ -1958,7 +2165,7 @@ function collectFichaData(){
 }
 
 async function salvarFicha(){
-  if(!isAdmin)return;
+  if(!isAdmin&&!isLab)return;
   const data=collectFichaData();
   try{
     const col=window.__fb.collection(window.__fb.db,'laboratorio');
@@ -2389,38 +2596,46 @@ async function runDashboard(){
   document.getElementById('dashEmpty').style.display='none';
 
   // ── SNAPSHOT ATUAL ────────────────────────────────────────────────────
-  const kanban = vehicles.filter(v=>!STATUS_OCULTOS_KANBAN.includes(v.status));
-  const enviados = vehicles.filter(v=>v.status==='Enviado');
-
-  // Contagens por status
+  const kanban=vehicles.filter(v=>!STATUS_OCULTOS_KANBAN.includes(v.status));
+  const enviados=vehicles.filter(v=>v.status==='Enviado');
   const byStatus={};
   kanban.forEach(v=>{ byStatus[v.status]=(byStatus[v.status]||0)+1; });
-
-  // Contagens por modelo
   const modelCount={};
   kanban.forEach(v=>{ modelCount[v.modelo]=(modelCount[v.modelo]||0)+1; });
-
-  // Técnicos: conta vistorias realizadas (veículos com tecnico preenchido)
-  const techCount={};
-  vehicles.filter(v=>v.tecnico).forEach(v=>{
-    techCount[v.tecnico]=(techCount[v.tecnico]||0)+1;
-  });
-
-  // Modelos mais enviados
   const modelEnviadoCount={};
   enviados.forEach(v=>{ modelEnviadoCount[v.modelo]=(modelEnviadoCount[v.modelo]||0)+1; });
-
-  // Stand By com checklist
-  const standByComVistoria=vehicles.filter(v=>v.status==='Stand By'&&v.checklist);
   const standByTotal=vehicles.filter(v=>v.status==='Stand By');
+  const standByComVistoria=vehicles.filter(v=>v.status==='Stand By'&&v.checklist);
 
-  // ── TENTATIVA DE HISTÓRICO (opcional, não bloqueia o dashboard) ────────
+  // Técnicos: conta veículos (kanban + enviados) por técnico
+  const techVehicleCount={};
+  vehicles.filter(v=>v.tecnico).forEach(v=>{
+    techVehicleCount[v.tecnico]=(techVehicleCount[v.tecnico]||0)+1;
+  });
+
+  // ── FICHAS DE LABORATÓRIO (item 10) ──────────────────────────────────
+  let labFichas=[];
+  try{
+    const snap=await Promise.race([
+      window.__fb.getDocs(window.__fb.collection(window.__fb.db,'laboratorio')),
+      new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),5000))
+    ]);
+    snap.forEach(d=>labFichas.push({id:d.id,...d.data()}));
+  }catch(e){ console.warn('Lab fichas indisponíveis:',e.message); }
+
+  // Conta fichas por técnico (campo nomeInsp1 para carregador, tec1 para bateria)
+  const techLabCount={};
+  labFichas.forEach(f=>{
+    const nome=f.tec1||f.nomeInsp1||null;
+    if(nome) techLabCount[nome]=(techLabCount[nome]||0)+1;
+  });
+
+  // ── HISTÓRICO (opcional) ──────────────────────────────────────────────
   let histEvents=[];
   try{
-    if(window.__fb && window.__fb.historyCol && window.__fb.getDocs){
-      const {historyCol,getDocs}=window.__fb;
+    if(window.__fb&&window.__fb.historyCol&&window.__fb.getDocs){
       const snap=await Promise.race([
-        getDocs(historyCol),
+        window.__fb.getDocs(window.__fb.historyCol),
         new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),5000))
       ]);
       snap.forEach(d=>{
@@ -2431,89 +2646,99 @@ async function runDashboard(){
         }
       });
     }
-  }catch(e){
-    console.warn('Histórico indisponível — dashboard mostrará snapshot atual.',e.message||e);
-    // não bloqueia — continua com dados dos veículos
-  }
+  }catch(e){ console.warn('Histórico indisponível:',e.message); }
 
-  // Período selecionado (para filtrar histórico se existir)
   const fromStr=document.getElementById('dashFrom').value;
   const toStr=document.getElementById('dashTo').value;
   const from=fromStr?new Date(fromStr+'T00:00:00'):null;
   const to=toStr?new Date(toStr+'T23:59:59'):null;
   const inPeriod=(ts)=>(!from||ts>=from)&&(!to||ts<=to);
-
   const histPeriod=histEvents.filter(e=>inPeriod(e.ts));
   const hasHist=histPeriod.length>0;
 
   if(from&&to){
     document.getElementById('dashPeriodLabel').textContent=
       'Período: '+from.toLocaleDateString('pt-BR')+' até '+to.toLocaleDateString('pt-BR')+
-      (hasHist?' (com histórico de eventos)':' (dados do snapshot atual)');
+      (hasHist?' · com histórico':' · snapshot atual');
+  } else {
+    document.getElementById('dashPeriodLabel').textContent='Exibindo dados atuais do Kanban';
   }
 
-  // ── CARTÕES ───────────────────────────────────────────────────────────
+  // ── CARTÕES ──────────────────────────────────────────────────────────
   function setCard(id,deltaId,val,note){
-    document.getElementById(id).textContent=val;
-    const el=document.getElementById(deltaId);
-    if(el){ el.textContent=note||''; el.className='d-delta same'; }
+    const el=document.getElementById(id);
+    if(el) el.textContent=val;
+    const del=document.getElementById(deltaId);
+    if(del){ del.textContent=note||''; del.className='d-delta same'; }
   }
 
   if(hasHist){
     const diffMs=(to&&from)?to-from:30*24*60*60*1000;
     const prevTo=from?new Date(from.getTime()-1):new Date();
     const prevFrom=new Date(prevTo.getTime()-diffMs);
-    const inPrev=(ts)=>ts>=prevFrom&&ts<=prevTo;
-    const histPrev=histEvents.filter(e=>inPrev(e.ts));
-
-    function setCardDelta(id,deltaId,curr,prevVal){
-      document.getElementById(id).textContent=curr;
-      const diff=curr-prevVal;
-      const el=document.getElementById(deltaId);
-      if(!el)return;
-      if(diff>0){el.textContent='▲ '+diff+' vs ant.';el.className='d-delta up';}
-      else if(diff<0){el.textContent='▼ '+Math.abs(diff)+' vs ant.';el.className='d-delta down';}
-      else{el.textContent='= igual ao ant.';el.className='d-delta same';}
+    const histPrev=histEvents.filter(e=>e.ts>=prevFrom&&e.ts<=prevTo);
+    function setDelta(id,did,curr,prev){
+      const el=document.getElementById(id); if(el) el.textContent=curr;
+      const diff=curr-prev;
+      const del=document.getElementById(did); if(!del)return;
+      if(diff>0){del.textContent='▲ '+diff+' vs ant.';del.className='d-delta up';}
+      else if(diff<0){del.textContent='▼ '+Math.abs(diff)+' vs ant.';del.className='d-delta down';}
+      else{del.textContent='= igual';del.className='d-delta same';}
     }
-    setCardDelta('dEntradas','dEntradasDelta',
+    setDelta('dEntradas','dEntradasDelta',
       histPeriod.filter(e=>e.statusNovo==='Aguardando Manutenção').length,
       histPrev.filter(e=>e.statusNovo==='Aguardando Manutenção').length);
-    setCardDelta('dStandBy','dStandByDelta',
+    setDelta('dStandBy','dStandByDelta',
       histPeriod.filter(e=>e.statusNovo==='Stand By').length,
       histPrev.filter(e=>e.statusNovo==='Stand By').length);
-    setCardDelta('dEnviados','dEnviadosDelta',
+    setDelta('dEnviados','dEnviadosDelta',
       histPeriod.filter(e=>e.statusNovo==='Enviado').length,
       histPrev.filter(e=>e.statusNovo==='Enviado').length);
-    setCardDelta('dVistoria','dVistoriaDelta',
+    setDelta('dVistoria','dVistoriaDelta',
       histPeriod.filter(e=>e.statusNovo==='Em Vistoria').length,
       histPrev.filter(e=>e.statusNovo==='Em Vistoria').length);
   } else {
-    // Sem histórico: usa snapshot atual
-    setCard('dEntradas','dEntradasDelta', byStatus['Aguardando Manutenção']||0, 'snapshot atual');
-    setCard('dStandBy','dStandByDelta', standByTotal.length, 'snapshot atual');
-    setCard('dEnviados','dEnviadosDelta', enviados.length, 'total enviados');
-    setCard('dVistoria','dVistoriaDelta', standByComVistoria.length, 'com checklist');
+    setCard('dEntradas','dEntradasDelta',byStatus['Aguardando Manutenção']||0,'snapshot atual');
+    setCard('dStandBy','dStandByDelta',standByTotal.length,'snapshot atual');
+    setCard('dEnviados','dEnviadosDelta',enviados.length,'total enviados');
+    setCard('dVistoria','dVistoriaDelta',standByComVistoria.length,'com checklist');
   }
-  document.getElementById('dAtivos').textContent=byStatus['Em Produção']||0;
-  document.getElementById('dAguardando').textContent=byStatus['Aguardando Manutenção']||0;
+  const emProducaoEl=document.getElementById('dAtivos'); if(emProducaoEl) emProducaoEl.textContent=byStatus['Em Produção']||0;
+  const aguardandoEl=document.getElementById('dAguardando'); if(aguardandoEl) aguardandoEl.textContent=byStatus['Aguardando Manutenção']||0;
 
-  // ── RANKING TÉCNICOS ─────────────────────────────────────────────────
-  const techSorted=Object.entries(techCount).sort((a,b)=>b[1]-a[1]);
-  const maxTech=techSorted[0]?techSorted[0][1]:1;
+  // ── RANKING TÉCNICOS (veículos + fichas lab) ──────────────────────────
+  // Junta contagem de veículos e fichas por técnico
+  const allTechs=new Set([...Object.keys(techVehicleCount),...Object.keys(techLabCount)]);
+  const techSorted=[...allTechs].map(nome=>({
+    nome,
+    veiculos:techVehicleCount[nome]||0,
+    fichas:techLabCount[nome]||0,
+    total:(techVehicleCount[nome]||0)+(techLabCount[nome]||0)
+  })).sort((a,b)=>b.total-a.total);
+
+  const maxTotal=techSorted[0]?techSorted[0].total:1;
   document.getElementById('dashTechRanking').innerHTML=techSorted.length?
-    techSorted.map(([nome,n])=>`
-      <div class="dash-bar-row">
-        <div class="dash-bar-label" title="${nome}">${nome}</div>
-        <div class="dash-bar-track"><div class="dash-bar-fill" style="width:${Math.round(n/maxTech*100)}%"></div></div>
-        <div class="dash-bar-val">${n}</div>
+    techSorted.map(t=>`
+      <div class="dash-bar-row" style="flex-direction:column;align-items:flex-start;gap:3px;padding-bottom:8px;border-bottom:1px solid #f0f0f0;margin-bottom:4px">
+        <div style="font-size:12px;font-weight:700;color:#16424a">${t.nome}</div>
+        <div style="display:flex;gap:6px;width:100%;align-items:center">
+          <div style="font-size:10px;color:#3f8c97;width:80px">🏍️ Veículos: ${t.veiculos}</div>
+          <div class="dash-bar-track" style="flex:1"><div class="dash-bar-fill" style="width:${Math.round((t.veiculos/maxTotal)*100)}%;background:#0e6e7a"></div></div>
+        </div>
+        <div style="display:flex;gap:6px;width:100%;align-items:center">
+          <div style="font-size:10px;color:#3f8c97;width:80px">📋 Lab: ${t.fichas}</div>
+          <div class="dash-bar-track" style="flex:1"><div class="dash-bar-fill" style="width:${Math.round((t.fichas/maxTotal)*100)}%;background:#7c3aed"></div></div>
+        </div>
       </div>`).join(''):
-    '<div class="dash-empty">Nenhum técnico vinculado ainda.</div>';
+    '<div class="dash-empty">Nenhum técnico com registros ainda.</div>';
 
-  // ── MODELOS MAIS FREQUENTES (kanban atual) ────────────────────────────
-  function renderBar(data, containerId, color){
+  // ── MODELOS MAIS FREQUENTES ───────────────────────────────────────────
+  function renderBar(data,containerId,color){
     const sorted=Object.entries(data).sort((a,b)=>b[1]-a[1]).slice(0,6);
     const max=sorted[0]?sorted[0][1]:1;
-    document.getElementById(containerId).innerHTML=sorted.length?
+    const el=document.getElementById(containerId);
+    if(!el)return;
+    el.innerHTML=sorted.length?
       sorted.map(([m,n])=>`
         <div class="dash-bar-row">
           <div class="dash-bar-label">${m}</div>
@@ -2523,61 +2748,54 @@ async function runDashboard(){
       '<div class="dash-empty">Nenhum dado.</div>';
   }
   renderBar(modelCount,'dashModelosEntrada','#3f8c97');
-
-  // Modelos em Stand By
   const sbModelCount={};
   standByTotal.forEach(v=>{ sbModelCount[v.modelo]=(sbModelCount[v.modelo]||0)+1; });
   renderBar(sbModelCount,'dashModelosStandBy','#059669');
 
-  // ── GRÁFICO DE PIZZA: distribuição por status ─────────────────────────
-  const ctx1=document.getElementById('dashLineChart').getContext('2d');
-  if(dashLineChartInst)dashLineChartInst.destroy();
-
-  const statusLabels=Object.keys(byStatus).filter(s=>byStatus[s]>0);
-  const statusValues=statusLabels.map(s=>byStatus[s]);
-  const colors=['#0e6e7a','#f59e0b','#f87171','#4ade80','#c084fc','#60a5fa','#facc15','#86efac','#94a3b8'];
-
-  dashLineChartInst=new Chart(ctx1,{
-    type:'doughnut',
-    data:{
-      labels:statusLabels,
-      datasets:[{data:statusValues,backgroundColor:colors.slice(0,statusLabels.length),borderWidth:2,borderColor:'#f3f3f3'}]
-    },
-    options:{
-      responsive:true,maintainAspectRatio:false,
-      plugins:{
+  // ── GRÁFICO PIZZA: distribuição por status ─────────────────────────────
+  const ctx1=document.getElementById('dashLineChart');
+  if(ctx1){
+    if(dashLineChartInst)dashLineChartInst.destroy();
+    const statusLabels=Object.keys(byStatus).filter(s=>byStatus[s]>0);
+    const statusValues=statusLabels.map(s=>byStatus[s]);
+    const colors=['#0e6e7a','#f59e0b','#f87171','#4ade80','#c084fc','#60a5fa','#facc15','#86efac','#94a3b8','#7c3aed'];
+    dashLineChartInst=new Chart(ctx1.getContext('2d'),{
+      type:'doughnut',
+      data:{labels:statusLabels,datasets:[{data:statusValues,backgroundColor:colors.slice(0,statusLabels.length),borderWidth:2,borderColor:'#f3f3f3'}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{
         legend:{position:'right',labels:{color:'#16424a',font:{size:10},boxWidth:12}},
         title:{display:true,text:'Distribuição atual por status',color:'#16424a',font:{size:12}}
-      }
-    }
-  });
+      }}
+    });
+  }
 
-  // ── GRÁFICO COMPARATIVO: modelos mais frequentes ──────────────────────
-  const ctx2=document.getElementById('dashCompChart').getContext('2d');
-  if(dashCompChartInst)dashCompChartInst.destroy();
-
-  const topModels=Object.entries(modelCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
-  dashCompChartInst=new Chart(ctx2,{
-    type:'bar',
-    data:{
-      labels:topModels.map(([m])=>m),
-      datasets:[
-        {label:'No Kanban',data:topModels.map(([m,n])=>n),backgroundColor:'#0e6e7a',borderRadius:5},
-        {label:'Enviados',data:topModels.map(([m])=>modelEnviadoCount[m]||0),backgroundColor:'#f59e0b',borderRadius:5},
-      ]
-    },
-    options:{
-      responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{labels:{color:'#16424a',font:{size:10}}}},
-      scales:{
-        x:{ticks:{color:'#3f8c97',font:{size:10}},grid:{display:false}},
-        y:{ticks:{color:'#3f8c97',stepSize:1},grid:{color:'#0e6e7a11'},beginAtZero:true}
+  // ── GRÁFICO BARRAS: top modelos kanban vs enviados ─────────────────────
+  const ctx2=document.getElementById('dashCompChart');
+  if(ctx2){
+    if(dashCompChartInst)dashCompChartInst.destroy();
+    const topModels=Object.entries(modelCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
+    dashCompChartInst=new Chart(ctx2.getContext('2d'),{
+      type:'bar',
+      data:{
+        labels:topModels.map(([m])=>m),
+        datasets:[
+          {label:'No Kanban',data:topModels.map(([m,n])=>n),backgroundColor:'#0e6e7a',borderRadius:5},
+          {label:'Enviados',data:topModels.map(([m])=>modelEnviadoCount[m]||0),backgroundColor:'#f59e0b',borderRadius:5},
+        ]
+      },
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{labels:{color:'#16424a',font:{size:10}}}},
+        scales:{
+          x:{ticks:{color:'#3f8c97',font:{size:10}},grid:{display:false}},
+          y:{ticks:{color:'#3f8c97',stepSize:1},grid:{color:'#0e6e7a11'},beginAtZero:true}
+        }
       }
-    }
-  });
+    });
+  }
 
   document.getElementById('dashContent').style.display='block';
 }
+
 
 
 function copyMsg(){
