@@ -1192,7 +1192,7 @@ function render(){
     tbody.innerHTML=filtered.map(v=>`<tr${sp&&v.patrimonio.toLowerCase()===sp?' style="background:#1a9aa814"':''}>
       <td style="font-weight:700">${v.modelo}</td>
       <td style="font-family:monospace;font-size:13px">${v.patrimonio}</td>
-      <td>${isAdmin?statusSelectHTML(v.status,v._i):`<span class="badge ${badgeClass(v.status)}">${v.status}</span>`}
+      <td>${(isAdmin||isTecnico)?statusSelectHTML(v.status,v._i):`<span class="badge ${badgeClass(v.status)}">${v.status}</span>`}
         ${isAdmin&&v.status==='Em Vistoria'?`<button onclick="openChecklist(${v._i},false)" style="margin-left:6px;background:#0e6e7a;color:#fff;border:none;border-radius:5px;padding:3px 8px;font-size:11px;font-weight:700;cursor:pointer">📋 Vistoria</button>`:''}
         ${v.status==='Stand By'&&v.checklist?`<button onclick="openChecklist(${v._i},true)" style="margin-left:6px;background:#f3f3f3;color:#0e6e7a;border:1px solid #0e6e7a;border-radius:5px;padding:3px 8px;font-size:11px;font-weight:700;cursor:pointer">👁️ Ver Vistoria</button>`:''}
         ${isExpedicao&&v.status==='Stand By'?`<button onclick="openEnviadoPopup(${v._i})" style="margin-left:6px;background:#f59e0b;color:#fff;border:none;border-radius:5px;padding:3px 8px;font-size:11px;font-weight:700;cursor:pointer">📦 Enviar</button>`:''}
