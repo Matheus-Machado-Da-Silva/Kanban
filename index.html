@@ -471,6 +471,7 @@ tr:last-child td{border-bottom:none}
     <!-- Botões para edição (admin + Em Vistoria) -->
     <div id="checklistResultBtns" class="chk-result-btns" style="display:none">
       <button class="btn-reprovado" onclick="reprovarChecklist()">✕ Reprovado → Em Produção</button>
+      <button class="btn-save" style="background:#f59e0b;flex:0.6;height:44px;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer" onclick="downloadChecklistPDF()">⬇️ PDF</button>
       <button class="btn-aprovado" onclick="aprovarChecklist()">✓ Aprovado → Stand By</button>
     </div>
     <div id="checklistSaveBtns" class="modal-btns" style="display:none">
@@ -1402,9 +1403,9 @@ function saveVehicle(){
 
 // ==================== CHECKLIST MANUTENÇÃO ====================
 const MANUTENCAO_GROUPS=[
-  {grupo:'Plataforma', itens:['Assoalho Metálico','Assoalho Plástico','Tapetes','Outros (Plataforma)']},
-  {grupo:'Direção', itens:['"T" da Torre','Travas da Torre','Manoplas','Pivô','Display (Direção)','Outros (Direção)']},
-  {grupo:'Eletrônica', itens:['Power Board','Control Board','Drive Board','Main Board','Motor','Sensores','Cabeamento','Outros (Eletrônica)']},
+  {grupo:'Plataforma', itens:['Assoalho Metálico','Assoalho Plástico','Tapetes','Pintura','Adaptação de Roda','Outros (Plataforma)']},
+  {grupo:'Direção', itens:['T da Torre','Travas da Torre','Manoplas','Pivô','Display (Direção)','Controle Remoto Original','Controle Remoto Auxiliar','Adaptação de T','Outros (Direção)']},
+  {grupo:'Eletrônica', itens:['Power Board','Control Board','Drive Board','Main Board','Motor','Sensores','Cabeamento','Botão On-Off','Conector de Carga','Outros (Eletrônica)']},
   {grupo:'Mecânica', itens:['Couplings','Transmissão','Outros (Mecânica)']},
   {grupo:'Acessórios', itens:['Para-lamas','Carenagens','Display (Acessórios)','Outros (Acessórios)']},
   {grupo:'Calibração', itens:['Aplicativo','Controle','Outros (Calibração)']},
