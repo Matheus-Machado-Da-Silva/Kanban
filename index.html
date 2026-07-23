@@ -532,7 +532,8 @@ tr:last-child td{border-bottom:none}
     <p style="font-size:11px;color:#f59e0b;margin-top:.5rem">⚠️ O preenchimento do checklist de manutenção é obrigatório para avançar para "Em Teste".</p>
     <div class="modal-btns">
       <button class="btn-cancel" onclick="cancelManutencao()">Cancelar</button>
-      <button class="btn-save" style="background:#f59e0b" onclick="confirmarManutencao()">✓ Confirmar e Avançar para Em Teste</button>
+      <button class="btn-save" style="background:#f59e0b;flex:0.8" onclick="downloadManutencaoPDF()">⬇️ PDF</button>
+      <button class="btn-save" onclick="confirmarManutencao()">✓ Confirmar → Em Teste</button>
     </div>
   </div>
 </div>
@@ -1428,31 +1429,66 @@ function openChecklistManutencao(i, nextStatus){
 
 function renderManutencaoItems(){
   const container=document.getElementById('manutencaoItems');
-  container.innerHTML=MANUTENCAO_GROUPS.map((g,gi)=>`
-    <div class="man-group">
-      <div class="man-group-title">${g.grupo}</div>
-      ${g.itens.map((item,ii)=>{
-        const key=`${gi}_${ii}`;
-        const state=manutencaoState[item]||{val:null,obs:''};
-        const v=state.val;
-        return `<div class="man-item" id="mitem_${gi}_${ii}">
-          <div class="man-item-top">
-            <span class="man-item-name">${item}</span>
-            <div class="man-btns">
-              <button class="man-btn ok${v==='OK'?' active':''}" onclick="setManItem('${item.replace(/'/g,"\\'")}','OK')">OK</button>
-              <button class="man-btn recon${v==='Recon'?' active':''}" onclick="setManItem('${item.replace(/'/g,"\\'")}','Recon')">Recon</button>
-              <button class="man-btn trocado${v==='Trocado'?' active':''}" onclick="setManItem('${item.replace(/'/g,"\\'")}','Trocado')">Trocado</button>
-              <button class="man-btn npos${v==='Não Possui'?' active':''}" onclick="setManItem('${item.replace(/'/g,"\\'")}','Não Possui')">N/P</button>
-            </div>
-            <button class="man-obs-btn" onclick="toggleManObs('${item.replace(/'/g,"\\'")}')">+ obs</button>
+
+  let html='';
+  MANUTENCAO_GROUPS.forEach((g,gi)=>{
+    html+=`<div class="man-group"><div class="man-group-title">${g.grupo}</div>`;
+    g.itens.forEach((item,ii)=>{
+      const state=manutencaoState[item]||{val:null,obs:''};
+      const v=state.val;
+      html+=`<div class="man-item" id="mitem_${gi}_${ii}">
+        <div class="man-item-top">
+          <span class="man-item-name">${item}</span>
+          <div class="man-btns">
+            <button class="man-btn ok${v==='OK'?' active':''}" data-item="${gi}__${ii}" data-val="OK">OK</button>
+            <button class="man-btn recon${v==='Recon'?' active':''}" data-item="${gi}__${ii}" data-val="Recon">Recon</button>
+            <button class="man-btn trocado${v==='Trocado'?' active':''}" data-item="${gi}__${ii}" data-val="Trocado">Trocado</button>
+            <button class="man-btn npos${v==='Não Possui'?' active':''}" data-item="${gi}__${ii}" data-val="Não Possui">N/P</button>
           </div>
-          <div class="man-obs-wrap" id="manobs_${gi}_${ii}" style="display:${state.obs?'block':'none'}">
-            <textarea class="man-obs-input" placeholder="Observação..." 
-              onchange="setManObs('${item.replace(/'/g,"\\'")}',this.value)">${state.obs||''}</textarea>
-          </div>
-        </div>`;
-      }).join('')}
-    </div>`).join('');
+          <button class="man-obs-btn" data-obs="${gi}__${ii}">+ obs</button>
+        </div>
+        <div class="man-obs-wrap" id="manobs_${gi}_${ii}" style="display:${state.obs?'block':'none'}">
+          <textarea class="man-obs-input" data-obsitem="${gi}__${ii}" placeholder="Observação...">${state.obs||''}</textarea>
+        </div>
+      </div>`;
+    });
+    html+='</div>';
+  });
+  container.innerHTML=html;
+
+  // Event delegation — um único listener no container resolve todos os botões
+  container.querySelectorAll('.man-btn').forEach(btn=>{
+    btn.addEventListener('click',function(){
+      const key=this.dataset.item; // "gi__ii"
+      const val=this.dataset.val;
+      const [gi,ii]=key.split('__').map(Number);
+      const item=MANUTENCAO_GROUPS[gi].itens[ii];
+      if(!manutencaoState[item]) manutencaoState[item]={val:null,obs:''};
+      manutencaoState[item].val = manutencaoState[item].val===val ? null : val;
+      renderManutencaoItems();
+    });
+  });
+
+  container.querySelectorAll('.man-obs-btn').forEach(btn=>{
+    btn.addEventListener('click',function(){
+      const key=this.dataset.obs;
+      const el=document.getElementById('manobs_'+key.replace('__','_'));
+      if(!el)return;
+      const showing=el.style.display!=='none';
+      el.style.display=showing?'none':'block';
+      if(!showing){ const ta=el.querySelector('textarea'); if(ta) setTimeout(()=>ta.focus(),50); }
+    });
+  });
+
+  container.querySelectorAll('.man-obs-input').forEach(ta=>{
+    ta.addEventListener('input',function(){
+      const key=this.dataset.obsitem;
+      const [gi,ii]=key.split('__').map(Number);
+      const item=MANUTENCAO_GROUPS[gi].itens[ii];
+      if(!manutencaoState[item]) manutencaoState[item]={val:null,obs:''};
+      manutencaoState[item].obs=this.value;
+    });
+  });
 }
 
 function setManItem(item, val){
@@ -1467,22 +1503,16 @@ function setManObs(item, obs){
 }
 
 function toggleManObs(item){
-  // Encontra o elemento de obs pelo item name
   let found=null;
   MANUTENCAO_GROUPS.forEach((g,gi)=>{
-    g.itens.forEach((it,ii)=>{
-      if(it===item) found=`manobs_${gi}_${ii}`;
-    });
+    g.itens.forEach((it,ii)=>{ if(it===item) found=`manobs_${gi}_${ii}`; });
   });
   if(!found)return;
   const el=document.getElementById(found);
   if(!el)return;
   const showing=el.style.display!=='none';
   el.style.display=showing?'none':'block';
-  if(!showing){
-    const ta=el.querySelector('textarea');
-    if(ta) setTimeout(()=>ta.focus(),50);
-  }
+  if(!showing){ const ta=el.querySelector('textarea'); if(ta) setTimeout(()=>ta.focus(),50); }
 }
 
 async function confirmarManutencao(){
@@ -1506,6 +1536,96 @@ function cancelManutencao(){
   render(); // reverte select visualmente
 }
 document.getElementById('modalManutencao').addEventListener('click',function(e){if(e.target===this)cancelManutencao();});
+
+function downloadManutencaoPDF(){
+  if(!window.jspdf){alert('Aguarde o carregamento do gerador de PDF.');return;}
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const pw=190; const ml=10;
+  let y=10;
+  const v=manutencaoTargetIdx!==null?vehicles[manutencaoTargetIdx]:null;
+
+  // Cabeçalho
+  doc.setFillColor(14,61,68); doc.rect(0,0,210,20,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(12); doc.setFont('helvetica','bold');
+  doc.text('BRMOBILITY — Diário de Manutenção e Recebimento',105,9,{align:'center'});
+  doc.setFontSize(8); doc.setFont('helvetica','normal');
+  doc.text('Departamento Técnico',105,15,{align:'center'});
+  doc.setTextColor(0,0,0); y=26;
+
+  // Info do veículo
+  if(v){
+    doc.setFontSize(9); doc.setFont('helvetica','bold');
+    doc.text('MOD. VEÍCULO:',ml,y); doc.setFont('helvetica','normal'); doc.text(v.modelo||'',ml+30,y);
+    doc.setFont('helvetica','bold'); doc.text('Nº PATRIMÔNIO:',ml+90,y); doc.setFont('helvetica','normal'); doc.text(v.patrimonio||'',ml+122,y);
+    y+=6;
+    doc.setFont('helvetica','bold'); doc.text('TÉCNICO:',ml,y); doc.setFont('helvetica','normal'); doc.text(v.tecnico||'',ml+20,y);
+    doc.setFont('helvetica','bold'); doc.text('DATA:',ml+90,y); doc.setFont('helvetica','normal'); doc.text(new Date().toLocaleDateString('pt-BR'),ml+102,y);
+    y+=8;
+  }
+  doc.setDrawColor(14,61,68); doc.setLineWidth(0.5); doc.line(ml,y,ml+pw,y); y+=5;
+
+  const valLabels={'OK':'OK','Recon':'Recon','Trocado':'Trocado','Não Possui':'N/P'};
+  const valColors={'OK':[5,150,105],'Recon':[217,119,6],'Trocado':[37,99,235],'Não Possui':[107,114,128]};
+
+  MANUTENCAO_GROUPS.forEach(g=>{
+    if(y>265){doc.addPage();y=15;}
+    doc.setFillColor(14,61,68); doc.rect(ml,y-3,pw,7,'F');
+    doc.setTextColor(168,212,217); doc.setFontSize(8); doc.setFont('helvetica','bold');
+    doc.text(g.grupo.toUpperCase(),ml+2,y+2);
+    doc.setTextColor(0,0,0); y+=9;
+
+    g.itens.forEach(item=>{
+      if(y>272){doc.addPage();y=15;}
+      const state=manutencaoState[item]||{val:null,obs:''};
+      const val=state.val;
+      doc.setFontSize(8.5); doc.setFont('helvetica','normal');
+      doc.setDrawColor(220,220,220); doc.rect(ml,y-3,pw,7);
+      doc.setTextColor(0,0,0); doc.text(item,ml+2,y+2);
+      if(val){
+        const cor=valColors[val]||[107,114,128];
+        doc.setFillColor(...cor);
+        doc.roundedRect(ml+pw-22,y-2,20,5,1,1,'F');
+        doc.setTextColor(255,255,255); doc.setFontSize(7); doc.setFont('helvetica','bold');
+        doc.text(valLabels[val]||val,ml+pw-12,y+2,{align:'center'});
+        doc.setTextColor(0,0,0);
+      } else {
+        doc.setTextColor(180,180,180); doc.setFontSize(7);
+        doc.text('—',ml+pw-12,y+2,{align:'center'});
+        doc.setTextColor(0,0,0);
+      }
+      y+=7;
+      if(state.obs){
+        if(y>272){doc.addPage();y=15;}
+        doc.setFontSize(7.5); doc.setFont('helvetica','italic'); doc.setTextColor(80,80,80);
+        const lines=doc.splitTextToSize('Obs: '+state.obs,pw-10);
+        doc.text(lines,ml+4,y+1);
+        doc.setTextColor(0,0,0); doc.setFont('helvetica','normal');
+        y+=lines.length*4+2;
+      }
+    });
+    y+=3;
+  });
+
+  // Assinatura
+  if(y>255){doc.addPage();y=15;}
+  y+=8;
+  doc.setDrawColor(0,0,0); doc.setLineWidth(0.3);
+  doc.line(ml,y,ml+60,y); doc.line(ml+100,y,ml+160,y);
+  doc.setFontSize(8); doc.setFont('helvetica','normal');
+  doc.text('Técnico Responsável',ml+30,y+5,{align:'center'});
+  doc.text('Data de Finalização',ml+130,y+5,{align:'center'});
+
+  const totalPages=doc.internal.getNumberOfPages();
+  for(let p=1;p<=totalPages;p++){
+    doc.setPage(p);
+    doc.setFontSize(7); doc.setTextColor(150,150,150);
+    doc.text('BRMobility — Kanban Virtual — Gerado em '+new Date().toLocaleString('pt-BR'),105,291,{align:'center'});
+  }
+  const fname='Manutencao_'+(v?v.patrimonio:'sem_patrimonio')+'_'+new Date().toISOString().slice(0,10)+'.pdf';
+  doc.save(fname);
+}
 
 // ==================== TÉCNICO ====================
 let technicianTargetIdx=null;
