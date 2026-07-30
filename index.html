@@ -529,11 +529,19 @@ tr:last-child td{border-bottom:none}
     <h2>🔧 Diário de Manutenção</h2>
     <div id="manutencaoVehicleInfo" style="font-size:13px;font-weight:700;color:#16424a;margin-bottom:1rem;background:#e6f2f3;padding:8px 12px;border-radius:8px"></div>
     <div id="manutencaoItems" style="max-height:60vh;overflow-y:auto;-webkit-overflow-scrolling:touch"></div>
-    <p style="font-size:11px;color:#f59e0b;margin-top:.5rem">⚠️ O preenchimento do checklist de manutenção é obrigatório para avançar para "Em Teste".</p>
-    <div class="modal-btns">
+
+    <!-- Botões modo EDIÇÃO (técnico avançando status / admin editando) -->
+    <div id="manutencaoBtnsEdit" class="modal-btns" style="margin-top:.8rem">
+      <p style="font-size:11px;color:#f59e0b;width:100%;margin-bottom:6px" id="manutencaoEditNote">⚠️ Preenchimento obrigatório para avançar para "Em Teste".</p>
       <button class="btn-cancel" onclick="cancelManutencao()">Cancelar</button>
       <button class="btn-save" style="background:#f59e0b;flex:0.8" onclick="downloadManutencaoPDF()">⬇️ PDF</button>
-      <button class="btn-save" onclick="confirmarManutencao()">✓ Confirmar → Em Teste</button>
+      <button class="btn-save" id="btnConfirmarManutencao" onclick="confirmarManutencao()">✓ Confirmar → Em Teste</button>
+    </div>
+
+    <!-- Botões modo VISUALIZAÇÃO (técnico vendo checklist salvo) -->
+    <div id="manutencaoBtnsView" class="modal-btns" style="margin-top:.8rem;display:none">
+      <button class="btn-cancel" onclick="cancelManutencao()">Fechar</button>
+      <button class="btn-save" style="background:#f59e0b" onclick="downloadManutencaoPDF()">⬇️ Download PDF</button>
     </div>
   </div>
 </div>
@@ -1197,6 +1205,7 @@ function render(){
       <td>${(isAdmin||isTecnico)?statusSelectHTML(v.status,v._i):`<span class="badge ${badgeClass(v.status)}">${v.status}</span>`}
         ${isAdmin&&v.status==='Em Vistoria'?`<button onclick="openChecklist(${v._i},false)" style="margin-left:6px;background:#0e6e7a;color:#fff;border:none;border-radius:5px;padding:3px 8px;font-size:11px;font-weight:700;cursor:pointer">📋 Vistoria</button>`:''}
         ${v.status==='Stand By'&&v.checklist?`<button onclick="openChecklist(${v._i},true)" style="margin-left:6px;background:#f3f3f3;color:#0e6e7a;border:1px solid #0e6e7a;border-radius:5px;padding:3px 8px;font-size:11px;font-weight:700;cursor:pointer">👁️ Ver Vistoria</button>`:''}
+        ${v.checklistManutencao&&(isAdmin||isTecnico)?`<button onclick="openManutencaoView(${v._i})" style="margin-left:6px;background:#f3f3f3;color:#d97706;border:1px solid #d97706;border-radius:5px;padding:3px 8px;font-size:11px;font-weight:700;cursor:pointer">🔧 Ver Manutenção</button>`:''}
         ${isExpedicao&&v.status==='Stand By'?`<button onclick="openEnviadoPopup(${v._i})" style="margin-left:6px;background:#f59e0b;color:#fff;border:none;border-radius:5px;padding:3px 8px;font-size:11px;font-weight:700;cursor:pointer">📦 Enviar</button>`:''}
         ${v.tecnico?`<span style="font-size:10px;color:#3f8c97;display:block;margin-top:2px">🔧 ${v.tecnico}</span>`:''}
       </td>
@@ -1416,19 +1425,43 @@ let manutencaoTargetIdx=null;
 let manutencaoTargetStatus=null;
 let manutencaoState={}; // {item: {val:'OK'|'Recon'|'Trocado'|'Não Possui', obs:''}}
 
+let manutencaoReadOnly=false;
+
 function openChecklistManutencao(i, nextStatus){
   manutencaoTargetIdx=i;
   manutencaoTargetStatus=nextStatus;
+  manutencaoReadOnly=false; // edição — estamos avançando o status
   const v=vehicles[i];
   manutencaoState=v.checklistManutencao?JSON.parse(JSON.stringify(v.checklistManutencao)):{};
   document.getElementById('manutencaoVehicleInfo').textContent=
     v.modelo+' — Patrimônio '+v.patrimonio+(v.tecnico?' | Técnico: '+v.tecnico:'');
+  // mostra botões de confirmação
+  document.getElementById('manutencaoBtnsEdit').style.display='flex';
+  document.getElementById('manutencaoBtnsView').style.display='none';
+  renderManutencaoItems();
+  document.getElementById('modalManutencao').classList.add('open');
+}
+
+function openManutencaoView(i){
+  // abre o checklist de manutenção salvo para visualização (técnicos) ou edição (admin)
+  manutencaoTargetIdx=i;
+  manutencaoTargetStatus=null; // sem avanço de status
+  manutencaoReadOnly=!isAdmin; // técnicos só visualizam, admin pode editar
+  const v=vehicles[i];
+  manutencaoState=v.checklistManutencao?JSON.parse(JSON.stringify(v.checklistManutencao)):{};
+  document.getElementById('manutencaoVehicleInfo').textContent=
+    v.modelo+' — Patrimônio '+v.patrimonio+(v.tecnico?' | Técnico: '+v.tecnico:'')+
+    (v.checklistManutencaoData?' | '+new Date(v.checklistManutencaoData).toLocaleDateString('pt-BR'):'');
+  // mostra botões conforme perfil
+  document.getElementById('manutencaoBtnsEdit').style.display=isAdmin?'flex':'none';
+  document.getElementById('manutencaoBtnsView').style.display=!isAdmin?'flex':'none';
   renderManutencaoItems();
   document.getElementById('modalManutencao').classList.add('open');
 }
 
 function renderManutencaoItems(){
   const container=document.getElementById('manutencaoItems');
+  const ro=manutencaoReadOnly; // somente leitura para técnicos visualizando
 
   let html='';
   MANUTENCAO_GROUPS.forEach((g,gi)=>{
@@ -1436,19 +1469,23 @@ function renderManutencaoItems(){
     g.itens.forEach((item,ii)=>{
       const state=manutencaoState[item]||{val:null,obs:''};
       const v=state.val;
+      const btnStyle=ro?'pointer-events:none;opacity:0.75':'';
       html+=`<div class="man-item" id="mitem_${gi}_${ii}">
         <div class="man-item-top">
           <span class="man-item-name">${item}</span>
           <div class="man-btns">
-            <button class="man-btn ok${v==='OK'?' active':''}" data-item="${gi}__${ii}" data-val="OK">OK</button>
-            <button class="man-btn recon${v==='Recon'?' active':''}" data-item="${gi}__${ii}" data-val="Recon">Recon</button>
-            <button class="man-btn trocado${v==='Trocado'?' active':''}" data-item="${gi}__${ii}" data-val="Trocado">Trocado</button>
-            <button class="man-btn npos${v==='Não Possui'?' active':''}" data-item="${gi}__${ii}" data-val="Não Possui">N/P</button>
+            <button class="man-btn ok${v==='OK'?' active':''}" data-item="${gi}__${ii}" data-val="OK" style="${btnStyle}">OK</button>
+            <button class="man-btn recon${v==='Recon'?' active':''}" data-item="${gi}__${ii}" data-val="Recon" style="${btnStyle}">Recon</button>
+            <button class="man-btn trocado${v==='Trocado'?' active':''}" data-item="${gi}__${ii}" data-val="Trocado" style="${btnStyle}">Trocado</button>
+            <button class="man-btn npos${v==='Não Possui'?' active':''}" data-item="${gi}__${ii}" data-val="Não Possui" style="${btnStyle}">N/P</button>
           </div>
-          <button class="man-obs-btn" data-obs="${gi}__${ii}">+ obs</button>
+          ${!ro?`<button class="man-obs-btn" data-obs="${gi}__${ii}">+ obs</button>`:''}
         </div>
         <div class="man-obs-wrap" id="manobs_${gi}_${ii}" style="display:${state.obs?'block':'none'}">
-          <textarea class="man-obs-input" data-obsitem="${gi}__${ii}" placeholder="Observação...">${state.obs||''}</textarea>
+          ${ro
+            ? `<div style="font-size:12px;color:#7fa8af;font-style:italic;padding:4px 6px">${state.obs||''}</div>`
+            : `<textarea class="man-obs-input" data-obsitem="${gi}__${ii}" placeholder="Observação...">${state.obs||''}</textarea>`
+          }
         </div>
       </div>`;
     });
@@ -1456,10 +1493,12 @@ function renderManutencaoItems(){
   });
   container.innerHTML=html;
 
-  // Event delegation — um único listener no container resolve todos os botões
+  if(ro) return; // modo somente leitura — não adiciona listeners de edição
+
+  // Event delegation para botões de marcação
   container.querySelectorAll('.man-btn').forEach(btn=>{
     btn.addEventListener('click',function(){
-      const key=this.dataset.item; // "gi__ii"
+      const key=this.dataset.item;
       const val=this.dataset.val;
       const [gi,ii]=key.split('__').map(Number);
       const item=MANUTENCAO_GROUPS[gi].itens[ii];
@@ -1519,12 +1558,19 @@ async function confirmarManutencao(){
   if(manutencaoTargetIdx===null)return;
   const i=manutencaoTargetIdx;
   const oldKey=vehicles[i].modelo+'|'+vehicles[i].patrimonio;
-  const statusAnterior=vehicles[i].status;
   vehicles[i].checklistManutencao={...manutencaoState};
   vehicles[i].checklistManutencaoData=new Date().toISOString();
-  vehicles[i].status=manutencaoTargetStatus;
-  await persistUpsert(vehicles[i], oldKey, statusAnterior);
-  logStatusHistory(vehicles[i], statusAnterior);
+
+  if(manutencaoTargetStatus){
+    // avançando status (técnico ou admin movendo para Em Teste)
+    const statusAnterior=vehicles[i].status;
+    vehicles[i].status=manutencaoTargetStatus;
+    await persistUpsert(vehicles[i], oldKey, statusAnterior);
+    logStatusHistory(vehicles[i], statusAnterior);
+  } else {
+    // admin editando checklist salvo sem mudar status
+    await persistUpsert(vehicles[i], oldKey, null);
+  }
   document.getElementById('modalManutencao').classList.remove('open');
   manutencaoTargetIdx=null;
   render();
