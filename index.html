@@ -1430,31 +1430,40 @@ let manutencaoReadOnly=false;
 function openChecklistManutencao(i, nextStatus){
   manutencaoTargetIdx=i;
   manutencaoTargetStatus=nextStatus;
-  manutencaoReadOnly=false; // edição — estamos avançando o status
+  manutencaoReadOnly=false;
   const v=vehicles[i];
   manutencaoState=v.checklistManutencao?JSON.parse(JSON.stringify(v.checklistManutencao)):{};
   document.getElementById('manutencaoVehicleInfo').textContent=
     v.modelo+' — Patrimônio '+v.patrimonio+(v.tecnico?' | Técnico: '+v.tecnico:'');
-  // mostra botões de confirmação
   document.getElementById('manutencaoBtnsEdit').style.display='flex';
   document.getElementById('manutencaoBtnsView').style.display='none';
+  document.getElementById('btnConfirmarManutencao').textContent='✓ Confirmar → Em Teste';
+  document.getElementById('manutencaoEditNote').style.display='block';
   renderManutencaoItems();
   document.getElementById('modalManutencao').classList.add('open');
 }
 
 function openManutencaoView(i){
-  // abre o checklist de manutenção salvo para visualização (técnicos) ou edição (admin)
   manutencaoTargetIdx=i;
-  manutencaoTargetStatus=null; // sem avanço de status
-  manutencaoReadOnly=!isAdmin; // técnicos só visualizam, admin pode editar
+  manutencaoTargetStatus=null;
+  manutencaoReadOnly=!isAdmin;
   const v=vehicles[i];
   manutencaoState=v.checklistManutencao?JSON.parse(JSON.stringify(v.checklistManutencao)):{};
   document.getElementById('manutencaoVehicleInfo').textContent=
     v.modelo+' — Patrimônio '+v.patrimonio+(v.tecnico?' | Técnico: '+v.tecnico:'')+
     (v.checklistManutencaoData?' | '+new Date(v.checklistManutencaoData).toLocaleDateString('pt-BR'):'');
-  // mostra botões conforme perfil
-  document.getElementById('manutencaoBtnsEdit').style.display=isAdmin?'flex':'none';
-  document.getElementById('manutencaoBtnsView').style.display=!isAdmin?'flex':'none';
+
+  if(isAdmin){
+    // admin pode editar o checklist salvo
+    document.getElementById('manutencaoBtnsEdit').style.display='flex';
+    document.getElementById('manutencaoBtnsView').style.display='none';
+    document.getElementById('btnConfirmarManutencao').textContent='💾 Salvar Alterações';
+    document.getElementById('manutencaoEditNote').style.display='none';
+  } else {
+    // técnico só visualiza
+    document.getElementById('manutencaoBtnsEdit').style.display='none';
+    document.getElementById('manutencaoBtnsView').style.display='flex';
+  }
   renderManutencaoItems();
   document.getElementById('modalManutencao').classList.add('open');
 }
