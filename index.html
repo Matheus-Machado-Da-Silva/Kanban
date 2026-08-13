@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8"/>
@@ -857,16 +857,24 @@ function setSyncStatus(online){
 }
 
 function setPermissionUI(){
-  const appWrap=document.getElementById('appWrap');
-  const blockedScreen=document.getElementById('blockedScreen');
+    const appwrap = document.getElementById('appWrap');
+    const blockedScreen = document.getElementById('blockedScreen');
+    const enviadosPanel = document.getElementById('enviadosPanel');
 
-  if(!isLoggedIn){
-    if(appWrap) appWrap.style.display='none';
-    if(blockedScreen) blockedScreen.style.display='flex';
-  } else {
-    if(appWrap) appWrap.style.display='block';
-    if(blockedScreen) blockedScreen.style.display='none';
-  }
+    if(!isLoggedIn){
+        if(appwrap) appwrap.style.display = 'none';
+        if(blockedScreen) blockedScreen.style.display = 'flex';
+        if(enviadosPanel) enviadosPanel.style.display = 'none'; // Garante que some na tela de bloqueio
+    } else {
+        if(appwrap) appwrap.style.display = 'block';
+        if(blockedScreen) blockedScreen.style.display = 'none';
+        
+        // O painel de enviados só aparece se for admin ou expedição
+        if(enviadosPanel) {
+            enviadosPanel.style.display = (isAdmin || isExpedicao) ? 'block' : 'none';
+        }
+    }
+}
 
 setPermissionUI(); // <-- Cole esta linha aqui
   document.getElementById('editControls').style.display=isAdmin?'flex':'none';
