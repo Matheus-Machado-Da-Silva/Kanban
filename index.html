@@ -867,18 +867,7 @@ function setPermissionUI(){
     if(appWrap) appWrap.style.display='block';
     if(blockedScreen) blockedScreen.style.display='none';
   }
-function setPermissionUI(){
-    const appwrap=document.getElementById('appWrap');
-    const blockedScreen=document.getElementById('blockedScreen');
 
-    if(!isLoggedIn){
-        if(appwrap) appwrap.style.display='none';
-        if(blockedScreen) blockedScreen.style.display='flex';
-    } else {
-        if(appwrap) appwrap.style.display='block';
-        if(blockedScreen) blockedScreen.style.display='none';
-    }
-}
 setPermissionUI(); // <-- Cole esta linha aqui
   document.getElementById('editControls').style.display=isAdmin?'flex':'none';
   document.getElementById('viewOnlyControls').style.display=(isLoggedIn&&!isAdmin)?'flex':'none';
