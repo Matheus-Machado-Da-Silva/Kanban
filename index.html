@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8"/>
@@ -934,7 +934,7 @@ window.addEventListener('fb-ready', ()=>{
     isTecnico = !!user && TECNICO_EMAILS.includes(currentUserEmail||'');
     isViewer = !!user && !isAdmin && !isExpedicao && !isTecnico && AUTHORIZED_VIEWER_EMAILS.includes(currentUserEmail||'');
     isLab = !!user && (LAB_EMAILS.includes(currentuserEmail||'') || isAdmin);
-    isLoggedIn = isAdmin || isViewer || isExpedicao || isTecnico;
+    isLoggedIn = isAdmin || isViewer || isExpedicao || isTecnico || isLab;
     setPermissionUI();
   });
 
