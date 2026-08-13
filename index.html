@@ -933,7 +933,7 @@ window.addEventListener('fb-ready', ()=>{
     isExpedicao = !!user && currentUserEmail===EXPEDICAO_EMAIL;
     isTecnico = !!user && TECNICO_EMAILS.includes(currentUserEmail||'');
     isViewer = !!user && !isAdmin && !isExpedicao && !isTecnico && AUTHORIZED_VIEWER_EMAILS.includes(currentUserEmail||'');
-    isLab = !!user && (LAB_EMAILS.includes(currentUserEmail||'') || isAdmin);
+    isLab = !!user && (LAB_EMAILS.includes(currentuserEmail||'') || isAdmin);
     isLoggedIn = isAdmin || isViewer || isExpedicao || isTecnico;
     setPermissionUI();
   });
