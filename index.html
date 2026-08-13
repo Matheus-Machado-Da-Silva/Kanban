@@ -1220,7 +1220,8 @@ function render(){
   // Painel de Enviados (admin + expedição)
   const enviadosPanel=document.getElementById('enviadosPanel');
   const thEnvAcoes=document.getElementById('thEnviadosAcoes');
-  if(enviadosPanel){
+  enviadosPanel.style.display = 'none';
+  {
     if(isAdmin||isExpedicao){
       enviadosPanel.style.display='block';
       if(thEnvAcoes) thEnvAcoes.style.display=isAdmin?'':'none';
