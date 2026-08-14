@@ -857,26 +857,17 @@ function setSyncStatus(online){
 }
 
 function setPermissionUI(){
-    const appwrap = document.getElementById('appWrap');
-    const blockedScreen = document.getElementById('blockedScreen');
-    const enviadosPanel = document.getElementById('enviadosPanel');
+  const appWrap=document.getElementById('appWrap');
+  const blockedScreen=document.getElementById('blockedScreen');
 
-    if(!isLoggedIn){
-        if(appwrap) appwrap.style.display = 'none';
-        if(blockedScreen) blockedScreen.style.display = 'flex';
-        if(enviadosPanel) enviadosPanel.style.display = 'none'; // Garante que some na tela de bloqueio
-    } else {
-        if(appwrap) appwrap.style.display = 'block';
-        if(blockedScreen) blockedScreen.style.display = 'none';
-        
-        // O painel de enviados só aparece se for admin ou expedição
-        if(enviadosPanel) {
-            enviadosPanel.style.display = (isAdmin || isExpedicao) ? 'block' : 'none';
-        }
-    }
-}
+  if(!isLoggedIn){
+    if(appWrap) appWrap.style.display='none';
+    if(blockedScreen) blockedScreen.style.display='flex';
+  } else {
+    if(appWrap) appWrap.style.display='block';
+    if(blockedScreen) blockedScreen.style.display='none';
+  }
 
-setPermissionUI(); // <-- Cole esta linha aqui
   document.getElementById('editControls').style.display=isAdmin?'flex':'none';
   document.getElementById('viewOnlyControls').style.display=(isLoggedIn&&!isAdmin)?'flex':'none';
   document.getElementById('thAcoes').style.display=isAdmin?'':'none';
@@ -942,8 +933,8 @@ window.addEventListener('fb-ready', ()=>{
     isExpedicao = !!user && currentUserEmail===EXPEDICAO_EMAIL;
     isTecnico = !!user && TECNICO_EMAILS.includes(currentUserEmail||'');
     isViewer = !!user && !isAdmin && !isExpedicao && !isTecnico && AUTHORIZED_VIEWER_EMAILS.includes(currentUserEmail||'');
-    isLab = !!user && (LAB_EMAILS.includes(currentuserEmail||'') || isAdmin);
-    isLoggedIn = !!user && (isAdmin || isViewer || isExpedicao || isTecnico || isLab);
+    isLab = !!user && (LAB_EMAILS.includes(currentUserEmail||'') || isAdmin);
+    isLoggedIn = isAdmin || isViewer || isExpedicao || isTecnico;
     setPermissionUI();
   });
 
@@ -1228,8 +1219,7 @@ function render(){
   // Painel de Enviados (admin + expedição)
   const enviadosPanel=document.getElementById('enviadosPanel');
   const thEnvAcoes=document.getElementById('thEnviadosAcoes');
-  enviadosPanel.style.display = 'none';
-  {
+  if(enviadosPanel){
     if(isAdmin||isExpedicao){
       enviadosPanel.style.display='block';
       if(thEnvAcoes) thEnvAcoes.style.display=isAdmin?'':'none';
